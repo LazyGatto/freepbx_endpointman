@@ -61,7 +61,8 @@ class Endpointman extends FreePBX_Helpers implements BMO {
 	public $PROVISIONER_BASE; // Obsolete now used PHONE_MODULES_PATH
 
 	// const URL_PROVISIONER = "http://mirror.freepbx.org/provisioner/v3/";
-	const URL_PROVISIONER = "https://raw.githubusercontent.com/billsimon/provisioner/packaging/";
+	// const URL_PROVISIONER = "https://raw.githubusercontent.com/billsimon/provisioner/packaging/";
+	const URL_PROVISIONER = "https://ossepm.incrediblepbx.com/";
 	
 	const TABLES = array(
 		'devices' 		 	=> 'devices',
