@@ -28,13 +28,13 @@ class endpointmanager {
 
     function __construct() {
         global $amp_conf;
-        require_once('abstraction/freepbx.inc');
+        require_once('abstraction/freepbx.inc.php');
         $this->eda = new epm_data_abstraction();
 
-        require_once('system_functions.class');
+        require_once('system_functions.class.php');
         $this->system = new epm_system();
 
-        require_once('json.inc');
+        require_once('json.inc.php');
 
         $this->global_cfg = $this->eda->get_stored_globals();
 
@@ -96,8 +96,8 @@ class endpointmanager {
 
         //include the local template class
         if (!class_exists('RainTPL')) {
-            if (file_exists(LOCAL_PATH . "includes/rain.tpl.class.inc")) {
-                require(LOCAL_PATH . "includes/rain.tpl.class.inc");
+            if (file_exists(LOCAL_PATH . "includes/rain.tpl.class.inc.php")) {
+                require(LOCAL_PATH . "includes/rain.tpl.class.inc.php");
             } else {
                 die("Can't Load the Template Class");
             }
@@ -1889,7 +1889,7 @@ class endpointmanager {
                 $provisioner_lib->model = $phone_info['model'];
 
                 //Timezone
-                require('timezone.inc');
+                require('timezone.inc.php');
                 try {
                     $provisioner_lib->DateTimeZone = new DateTimeZone($settings['tz']);
                 } catch (Exception $e) {
@@ -3818,7 +3818,7 @@ class endpointmanager {
     }
 
     function listTZ($selected) {
-        require('timezone.inc');
+        require('timezone.inc.php');
         $data = DateTimeZone::listIdentifiers();
         $i = 0;
         foreach ($data as $key => $row) {

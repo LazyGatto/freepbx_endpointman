@@ -52,7 +52,7 @@ if($amp_conf['AMPENGINE'] != 'asterisk')
 
 
 
-include 'includes/functions.inc';
+include 'includes/functions.inc.php';
 global $endpoint, $debug;
 $debug = NULL;
 $endpoint = new endpointmanager();
