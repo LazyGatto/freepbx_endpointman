@@ -205,10 +205,9 @@
 	<div class="">
 		<div class="row">
 			<div class="col-md-12">
-				<div id="main-slider" class="liquid-slider">
 				<?php foreach($dtemplate['template_editor'] as $row) : ?> <!-- INI foreach de tabs -->
-					<div>
-                        <h2 class="title"><?php echo $row['title'];?></h2>
+                    <div class="section-title"><h2><?php echo $row['title'];?></h2></div>
+					<div class="section">
                     	<?php 
 						foreach($row['data'] as $srow) 	//INI foreach objetos de cada tab
 						{
@@ -494,9 +493,8 @@
 							
 						} //END foreach objetos de cada tabs
 						?>
-	                    </div>
-					<?php endforeach; ?> <!-- END foreach tabs -->
-				</div>
+	                </div>
+				<?php endforeach; ?> <!-- END foreach tabs -->
     		</div>
 	    </div>
     </div>
