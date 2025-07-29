@@ -205,9 +205,11 @@
 	<div class="">
 		<div class="row">
 			<div class="col-md-12">
-				<?php foreach($dtemplate['template_editor'] as $row) : ?> <!-- INI foreach de tabs -->
-                    <div class="section-title"><h2><?php echo $row['title'];?></h2></div>
-					<div class="section">
+				<?php foreach($dtemplate['template_editor'] as $keySec => $row) : ?> <!-- INI foreach de tabs -->
+                    <div class="section-title" data-for="<?= $keySec ?>">
+                        <h3><i class="fa fa-minus"></i><?= $row['title'];?></h3>
+                    </div>
+					<div class="section" data-id="<?= $keySec ?>">
                     	<?php 
 						foreach($row['data'] as $srow) 	//INI foreach objetos de cada tab
 						{
