@@ -20,7 +20,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 2.10\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-22 05:29+0000\n"
+"POT-Creation-Date: 2019-04-26 19:47-0400\n"
 "PO-Revision-Date: 2016-05-04 17:44+0200\n"
 "Last-Translator: ded <ceo@postmet.com>\n"
 "Language-Team: Russian <http://weblate.freepbx.org/projects/fpbxcn/"
@@ -292,7 +292,7 @@ msgstr "---Обновляем модель %_NAMEMOD_%"
 msgid "/tftpboot is not writable"
 msgstr ""
 
-#: Endpointman_Advanced.class.php:1222
+#: Endpointman_Advanced.class.php:1215
 msgid ""
 "<font color='#FF0000'><b>Please reboot & rebuild all imported phones</b></"
 "font>"
@@ -347,7 +347,8 @@ msgstr ""
 msgid "Advanced"
 msgstr ""
 
-#: page.epm_advanced.php:29 views/epm_devices_main.page.php:39
+#: endpointman.i18n.php:16 page.epm_advanced.php:29
+#: views/epm_devices_main.page.php:39
 msgid "Advanced Settings"
 msgstr "Расширенные настройки"
 
@@ -466,7 +467,7 @@ msgstr ""
 msgid "Click Here!"
 msgstr ""
 
-#: Endpointman_Advanced.class.php:1117
+#: Endpointman_Advanced.class.php:1110
 msgid "Click this link to download:"
 msgstr "Кликнуть на линк для скачивания:"
 
@@ -498,7 +499,7 @@ msgstr ""
 msgid "Config File Placeholder Values"
 msgstr ""
 
-#: views/rnav.php:8
+#: endpointman.i18n.php:18 views/rnav.php:8
 msgid "Config File Placeholders"
 msgstr ""
 
@@ -583,6 +584,10 @@ msgstr ""
 msgid "Device"
 msgstr ""
 
+#: endpointman.i18n.php:10
+msgid "Device List"
+msgstr ""
+
 #: views/epm_templates/editor.views.template.php:187
 msgid "Device's Description in FreePBX (Usually the Full Name)"
 msgstr ""
@@ -647,7 +652,7 @@ msgstr ""
 
 #: Endpointman_Advanced.class.php:938 Endpointman_Advanced.class.php:953
 #: Endpointman_Advanced.class.php:1011 Endpointman_Advanced.class.php:1016
-#: Endpointman_Advanced.class.php:1031 Endpointman_Advanced.class.php:1114
+#: Endpointman_Advanced.class.php:1031 Endpointman_Advanced.class.php:1107
 #: Endpointman_Config.class.php:893 Endpointman_Config.class.php:996
 #: Endpointman_Config.class.php:1010 Endpointman_Config.class.php:1015
 #: Endpointman_Config.class.php:1104 Endpointman_Config.class.php:1109
@@ -773,7 +778,7 @@ msgid "Error: "
 msgstr ""
 
 #: Endpointman_Advanced.class.php:921 Endpointman_Advanced.class.php:995
-#: Endpointman_Advanced.class.php:1155
+#: Endpointman_Advanced.class.php:1148
 #, php-format
 msgid "Error: %s"
 msgstr ""
@@ -785,7 +790,7 @@ msgid ""
 msgstr ""
 
 #: Endpointman_Advanced.class.php:914 Endpointman_Advanced.class.php:987
-#: Endpointman_Advanced.class.php:1145
+#: Endpointman_Advanced.class.php:1138
 msgid "Error: Can Not Find Uploaded Files!"
 msgstr ""
 
@@ -802,7 +807,7 @@ msgstr "Ошибка: команда не найдена!"
 msgid "Error: Failed to create the directory '%s', please Check Permissions!"
 msgstr ""
 
-#: Endpointman_Advanced.class.php:1164
+#: Endpointman_Advanced.class.php:1157
 #, php-format
 msgid "Error: File %s size is 0!"
 msgstr ""
@@ -811,7 +816,7 @@ msgstr ""
 msgid "Error: File Temp no Exists!"
 msgstr ""
 
-#: Endpointman_Advanced.class.php:1102
+#: Endpointman_Advanced.class.php:1095
 msgid "Error: ID Package send not valid, brand not exist!"
 msgstr ""
 
@@ -819,12 +824,12 @@ msgstr ""
 msgid "Error: Installing brands is disabled while in repo mode!"
 msgstr ""
 
-#: Endpointman_Advanced.class.php:1211
+#: Endpointman_Advanced.class.php:1204
 #, php-format
 msgid "Error: Invalid Brand Specified on line %d!"
 msgstr ""
 
-#: Endpointman_Advanced.class.php:1205
+#: Endpointman_Advanced.class.php:1198
 #, php-format
 msgid "Error: Invalid Extension Specified on line %d!"
 msgstr ""
@@ -838,12 +843,12 @@ msgstr ""
 msgid "Error: Invalid JSON Structure in %s/brand_data.json"
 msgstr ""
 
-#: Endpointman_Advanced.class.php:1214
+#: Endpointman_Advanced.class.php:1207
 #, php-format
 msgid "Error: Invalid Mac on line %d!"
 msgstr ""
 
-#: Endpointman_Advanced.class.php:1208
+#: Endpointman_Advanced.class.php:1201
 #, php-format
 msgid "Error: Invalid Model Specified on line %d!"
 msgstr ""
@@ -861,7 +866,7 @@ msgstr ""
 msgid "Error: No Local File for %s !"
 msgstr ""
 
-#: Endpointman_Advanced.class.php:1090
+#: Endpointman_Advanced.class.php:1083
 msgid "Error: No package set!"
 msgstr ""
 
@@ -878,11 +883,11 @@ msgstr ""
 msgid "Error: Not allowed in repo mode!!"
 msgstr ""
 
-#: Endpointman_Advanced.class.php:1093
+#: Endpointman_Advanced.class.php:1086
 msgid "Error: Package not valid!"
 msgstr ""
 
-#: Endpointman_Advanced.class.php:1224
+#: Endpointman_Advanced.class.php:1217
 msgid "Error: Possible file upload attack!"
 msgstr ""
 
@@ -914,7 +919,7 @@ msgstr ""
 msgid "Error: Value send is not number!"
 msgstr ""
 
-#: Endpointman_Advanced.class.php:1161
+#: Endpointman_Advanced.class.php:1154
 #, php-format
 msgid "Error: We support only CSV and TXT files, type file %s no support!"
 msgstr ""
@@ -956,7 +961,7 @@ msgstr "Экспорт CSV файла устройств"
 msgid "Export data configuracion devices."
 msgstr "Экспорт данных о конфигурации устройств."
 
-#: Endpointman_Advanced.class.php:1105
+#: Endpointman_Advanced.class.php:1098
 #, php-format
 msgid "Exporting %s ... "
 msgstr ""
@@ -1006,7 +1011,7 @@ msgstr ""
 msgid "Failed to install "
 msgstr "Ошибка при инсталлировании "
 
-#: Endpointman_Advanced.class.php:1327
+#: Endpointman_Advanced.class.php:1320
 msgid "Failed to write file to disk"
 msgstr "Ошибка при записи на диск"
 
@@ -1028,7 +1033,7 @@ msgstr "Файл не найден!"
 msgid "File not readable, check the permission! "
 msgstr "Файл не читается, проверьте права на чтение! "
 
-#: Endpointman_Advanced.class.php:1329
+#: Endpointman_Advanced.class.php:1322
 msgid "File upload stopped by extension"
 msgstr "Загрузка файла остановлена по расширению"
 
@@ -1115,7 +1120,7 @@ msgid "Heads up!"
 msgstr "Носы вверх!"
 
 #: Endpointman.class.php:145 Endpointman.class.php:152
-#: Endpointman_Advanced.class.php:1118
+#: Endpointman_Advanced.class.php:1111
 msgid "Here"
 msgstr "Здесь"
 
@@ -1135,7 +1140,7 @@ msgstr "Скрыть"
 msgid "Hostname of the Primary NTP Server from Global Settings"
 msgstr ""
 
-#: Endpointman_Advanced.class.php:1241
+#: Endpointman_Advanced.class.php:1234
 msgid "ID  not valid!"
 msgstr "ID не подходит!"
 
@@ -1232,7 +1237,7 @@ msgstr "Импорт пакета производителей  в ручном 
 msgid "Import/Export My Devices List"
 msgstr "Импорт/Экспорт Списка Моих Устройств"
 
-#: Endpointman_Advanced.class.php:1152
+#: Endpointman_Advanced.class.php:1145
 #, php-format
 msgid "Importing CSV file %s ...<br />"
 msgstr ""
@@ -1415,7 +1420,7 @@ msgstr "Совпадает!"
 msgid "Maximum stack depth exceeded"
 msgstr "Превышена максимальная глубина стека"
 
-#: Endpointman_Advanced.class.php:1325
+#: Endpointman_Advanced.class.php:1318
 msgid "Missing a temporary folder"
 msgstr "Неверная временная директория"
 
@@ -1512,7 +1517,7 @@ msgstr "Нет"
 msgid "No Brand Selected for Reboot"
 msgstr ""
 
-#: Endpointman_Advanced.class.php:1263
+#: Endpointman_Advanced.class.php:1256
 msgid "No Brand set!"
 msgstr "Не установлен бренд!"
 
@@ -1528,11 +1533,11 @@ msgstr ""
 msgid "No Devices Found"
 msgstr ""
 
-#: Endpointman_Advanced.class.php:1238
+#: Endpointman_Advanced.class.php:1231
 msgid "No ID set!"
 msgstr "ID не установлен!"
 
-#: Endpointman_Advanced.class.php:1260
+#: Endpointman_Advanced.class.php:1253
 msgid "No OUI set!"
 msgstr "Не установлен OUI!"
 
@@ -1558,7 +1563,7 @@ msgstr "Не выбрано"
 msgid "No command was sent!"
 msgstr ""
 
-#: Endpointman_Advanced.class.php:1323
+#: Endpointman_Advanced.class.php:1316
 msgid "No file was uploaded"
 msgstr "Файл не был загружен"
 
@@ -1619,6 +1624,25 @@ msgstr "Это не директория: "
 msgid "Number of the Voicemail from Featurecodes"
 msgstr ""
 
+#: endpointman.i18n.php:20
+msgid "OSS Endpoint Manager"
+msgstr ""
+
+#: endpointman.i18n.php:4
+msgid "OSS PBX End Point Manager"
+msgstr "Менеджер OSS PBX End Point"
+
+#: endpointman.i18n.php:8
+msgid ""
+"OSS PBX End Point Manager is the free supported PBX Endpoint Manager for "
+"FreePBX.\t\tIt is ***NOT*** supported by Sangoma. If you are looking for a "
+"supported endpoint manager please look into the Commercial Endpoint Manager "
+"by Sangoma Technologies, Inc\t\tThe front end gui is hosted at: https://"
+"github.com/FreePBX/endpointman\t\tThe backend configurator is hosted at: "
+"https://github.com/provisioner/Provisioner\t\tPull Requests can be made to "
+"either of these and are encouraged."
+msgstr ""
+
 #: views/epm_advanced/oui_manager.views.grid.php:24
 #: views/epm_advanced/oui_manager.views.new.modal.php:14
 msgid "OUI"
@@ -1667,7 +1691,7 @@ msgstr "Импорт/Экспорт пакета"
 msgid "Package Last Modified"
 msgstr "Последнее изменение пакета"
 
-#: page.epm_config.php:27 views/rnav.php:6
+#: endpointman.i18n.php:14 page.epm_config.php:27 views/rnav.php:6
 msgid "Package Manager"
 msgstr "Менеджер пакетов"
 
@@ -1971,7 +1995,7 @@ msgstr ""
 msgid "Setting Provision"
 msgstr "Установки снабжения"
 
-#: Endpointman_Advanced.class.php:53
+#: Endpointman_Advanced.class.php:53 endpointman.i18n.php:6
 #: views/epm_templates/editor.views.template.php:70 views/rnav.php:4
 msgid "Settings"
 msgstr "Установки"
@@ -2126,7 +2150,7 @@ msgstr ""
 msgid "Template Editor"
 msgstr "Редактор шаблона"
 
-#: views/rnav.php:7
+#: endpointman.i18n.php:12 views/rnav.php:7
 msgid "Template Manager"
 msgstr ""
 
@@ -2197,7 +2221,7 @@ msgstr ""
 msgid "The project is maintained at"
 msgstr ""
 
-#: Endpointman_Advanced.class.php:1319
+#: Endpointman_Advanced.class.php:1312
 msgid ""
 "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in "
 "the HTML form"
@@ -2205,13 +2229,13 @@ msgstr ""
 "Загруженный файл превысил значение директивы MAX_FILE_SIZE, указанную в  "
 "HTML-форме"
 
-#: Endpointman_Advanced.class.php:1317
+#: Endpointman_Advanced.class.php:1310
 msgid "The uploaded file exceeds the upload_max_filesize directive in php.ini"
 msgstr ""
 "Загруженный файл превысил значение директивы upload_max_filesize, указанную "
 "в  php.ini"
 
-#: Endpointman_Advanced.class.php:1321
+#: Endpointman_Advanced.class.php:1314
 msgid "The uploaded file was only partially uploaded"
 msgstr "Файл был загружен частично"
 
@@ -2342,7 +2366,7 @@ msgstr "Неизвестно"
 msgid "Unknown error"
 msgstr "Неизвестная ошибка"
 
-#: Endpointman_Advanced.class.php:1331
+#: Endpointman_Advanced.class.php:1324
 msgid "Unknown upload error"
 msgstr "Неизвестная ошибка  загрузки"
 
@@ -2534,9 +2558,6 @@ msgstr "требуется"
 #: views/epm_devices_main.page.php:554 views/epm_devices_main.page.php:561
 msgid "with"
 msgstr ""
-
-#~ msgid "OSS PBX End Point Manager"
-#~ msgstr "Менеджер OSS PBX End Point"
 
 #~ msgid ""
 #~ "OSS PBX End Point Manager is the free supported PBX Endpoint Manager for "

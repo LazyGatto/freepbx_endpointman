@@ -1,5 +1,5 @@
 <?php
-namespace FreePBX\modules;
+namespace FreePBX\modules\Endpointman;
 
 class epm_system {
     /**
@@ -79,129 +79,330 @@ class epm_system {
     }
 
     /**
-    * Uses which to find executables that asterisk can run/use
-    * @version 2.11
-    * @param string $exec Executable to find
-    * @package epm_system
-    */
-    function find_exec($exec) {
-        $o = exec('which '.$exec);
-        if($o) {
-            if(file_exists($o) && is_executable($o)) {
-                return($o);
-            } else {
-                return('');
-            }
-        } else {
-            return('');
+     * This function find the path of a executable file in the system
+     * 
+     * @param string $exec The executable file to find
+     * @param bool $which Whether to use the 'which' command to find the executable file
+     * @param bool $return_empty Whether to return an empty string if the executable file is not found
+     * @return string The path of the executable file or an empty string if the file is not found and $return_empty is true
+     * @package epm_system
+     * @example
+     * $exec = 'php';
+     * $path = $this->find_exec($exec);
+     * if (!empty($path)) {
+     *    echo "The path of the executable file '$exec' is: $path";
+     * } else {
+     *   echo "The executable file '$exec' was not found";
+     * }
+     * @example
+     * $exec = 'php';
+     * $path = $this->find_exec($exec, true);
+     * if (!empty($path)) {
+     *   echo "The path of the executable file '$exec' is: $path";
+     * } else {
+     *  echo "The executable file '$exec' was not found";
+     * }
+     * @example
+     * $exec = 'php';
+     * $path = $this->find_exec($exec, false, false);
+     * if (!empty($path)) {
+     *  echo "The path of the executable file '$exec' is: $path";
+     * } else {
+     * echo "The executable file '$exec' was not found";
+     * }
+     * @example
+     * $exec = 'php';
+     * $path = $this->find_exec($exec, true, false);
+     * if (!empty($path)) {
+     * echo "The path of the executable file '$exec' is: $path";
+     * } else {
+     * echo "The executable file '$exec' was not found";
+     * }
+     * @example
+     * $exec = 'php';
+     * $path = $this->find_exec($exec, false, true);
+     * if (!empty($path)) {
+     * echo "The path of the executable file '$exec' is: $path";
+     * } else {
+     * echo "The executable file '$exec' was not found";
+     * }
+     * @example
+     * $exec = 'php';
+     * $path = $this->find_exec($exec, true, true);
+     * if (!empty($path)) {
+     * echo "The path of the executable file '$exec' is: $path";
+     * } else {
+     * echo "The executable file '$exec' was not found";
+     * }
+     * @example
+     * $exec = 'php';
+     * $path = $this->find_exec($exec, false, false);
+     * if (!empty($path)) {
+     * echo "The path of the executable file '$exec' is: $path";
+     * } else {
+     * echo "The executable file '$exec' was not found";
+     * }
+     */
+    public function find_exec(?string $exec, bool $which = false, $return_empty = true)
+    {
+        if (empty($exec))
+        {
+            return '';
         }
+        $data_return = trim($exec);
+        $find_ok = false;
+        if (! $which)
+        {
+            if (! empty($data_return))
+            {
+                $paths = [
+                    "/usr/local/bin/$exec",
+                    "/usr/local/sbin/$exec",
+                    "/usr/bin/$exec",
+                    "/usr/sbin/$exec",
+                    "/sbin/$exec",
+                    "/bin/$exec",
+                    "/etc/$exec"
+                ];
+        
+                foreach ($paths as $path)
+                {
+                    if (file_exists($path))
+                    {
+                        $data_return = $path;
+                        $find_ok     = true;
+                        break;
+                    }
+                }
+            }
+        }
+        if ($which || !$find_ok)
+        {
+            $cmd = sprintf('which %s', $exec);
+            $out = exec($cmd);
+            if(! empty($out))
+            {
+                if(file_exists($out) && is_executable($out))
+                {
+                    $data_return = $out;
+                    $find_ok     = true;
+                }
+            }
+        }
+        if ($return_empty && ! $find_ok)
+        {
+            return '';
+        }
+        return $data_return;
     }
 
-    /**
-    * Downloads a file and places it in the destination defined
-    * @version 2.11
-    * @param string $url_file URL of File
-    * @param string $destination_file Destination of file
-    * @package epm_system
-    */
-    function download_file($url_file, $destination_file, &$error = array()) {
-			$dir = dirname($destination_file);
-			if(!file_exists($dir)) {
-				mkdir($dir);
-			}
-        //Determine if file_get_contents_url exists which is the default FreePBX Standard for downloading straight files
-        if(function_exists('file_get_contents_url')) {
-            $contents = file_get_contents_url($url_file);
-        } else {
-            //I really hope we NEVER get here.
-            $contents = file_get_contents($url_file);
-            if (!preg_match('/200/', $http_response_header[0])) {
-                $error['download_file'] = "Unknown Error in Download_file";
-                return false;
-            }
+
+
+
+    //TODO: Remove this function, it is not used. Only retrocompatibility.
+    public function download_file_old($url_file, $destination_file, &$error = array())
+    {
+        try {
+            $this->download_file($url_file, $destination_file);
+            
         }
-        //If contents are emtpy then we failed. Or something is wrong
-        if(!empty($contents)) {
-            $dirname = dirname($destination_file);
-            if (!file_exists($dirname)) {
-                mkdir($dirname);
-            }
-            if (!is_writable($dirname)) {
-                $error['download_file'] = "Directory '" . $dirname . "' is not writable! Unable to download files";
-                return false;
-            }
-            file_put_contents($destination_file, $contents);
-            //check file placement
-            if (!file_exists($destination_file)) {
-                $error['download_file'] = "File Doesn't Exist in '" . $dirname . "'. Unable to download files";
-                return false;
-            }
-            return true;
-        } else {
-            $error['download_file'] = "Contents of Remote file are blank! URL:".$url_file;
+        catch (\Exception $e)
+        {
+            $error['download_file'] = $e->getMessage();
             return false;
         }
+        return true;
     }
 
+
     /**
-    * Downloads a file and places it in the destination defined with progress
-    * @version 2.11
-    * @param string $url_file URL of File
-    * @param string $destination_file Destination of file
-    * @package epm_system
-    */
-    function download_file_with_progress_bar($url_file, $destination_file, &$error = array()) {
-	    set_time_limit(0);
-	    $headers = get_headers($url_file, 1);
-	    $size = $headers['Content-Length'];
-	    $randnumid = sprintf("%08d", mt_rand(1,99999999));
+     * Downloads a file from a given URL and saves it to a specified destination.
+     *
+     * @param string $url_file The URL of the file to be downloaded.
+     * @param string $destination_file The destination path where the file will be saved.
+     * @param bool $noException Whether to throw an exception if an error occurs during the download process.
+     * @return bool Returns true if the file was downloaded successfully, false otherwise.
+     * @throws \Exception If an error occurs during the download process and $error is null.
+     * @package epm_system
+     */
+    public function download_file($url_file, $destination_file, $noException = false)
+    {
+        $msg_error = null;
+		$dir       = dirname($destination_file);
 
-	    $dir = dirname($destination_file);
-	    if(!file_exists($dir)) {
-		    mkdir($dir);
-	    }
+		if(!file_exists($dir))
+        {
+			if (!mkdir($dir, 0777, true))
+            {
+                $msg_error = sprintf(_("Directory could not be created: %s"), $dir);
+            }
+		}
+        if (is_null($msg_error))
+        {
+            if (!is_writable($dir))
+            {
+                $msg_error = sprintf(_("Directory '%s' is not writable! Unable to download files"), $dir);
+            }
+            else
+            {
+                $fp = fopen($destination_file, 'w');
+                if ($fp === false)
+                {
+                    $msg_error = sprintf(_("Could not open target file: %s"), $destination_file);
+                }
+                else
+                {
+                    $ch = curl_init($url_file);
 
-	    if (preg_match('/200/', $headers[0])) {
-		    dbug("wget --no-cache " . $url_file . " -O " . $destination_file);
-		    $pid = $this->run_in_background("wget --no-cache " . $url_file . " -O " . $destination_file);
+                    curl_setopt($ch, CURLOPT_FILE, $fp);
+                    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                    curl_setopt($ch, CURLOPT_NOPROGRESS, true);
+        
+                    $response = curl_exec($ch);
+                    $httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                    $httpError = $response === false ? curl_error($ch) : null;
+       
+                    curl_close($ch);
+                    fclose($fp);
 
-		    echo sprintf("<div>"._("Downloading %s ...")."</div>", basename($destination_file));
-		    echo sprintf("<div id='DivProgressBar_%d' class='progress' style='width:100%%'>", $randnumid);
-		    echo "<div class='progress-bar progress-bar-striped' role='progressbar' aria-valuenow='0' aria-valuemin='0' aria-valuemax='100' style='width:0%'>0% ("._("Complete").")</div>";
-		    echo "</div>";
-		    usleep('300');
-		    while ($this->is_process_running($pid)) {
-			    $out = 100 * round(filesize($destination_file) / $size, 2);
-?>
-			    <script type="text/javascript">
-			    $('#DivProgressBar_<?php echo $randnumid; ?> .progress-bar')
-				    .css('width', <?php echo $out ?>+'%')
-				    .attr('aria-valuenow', <?php echo $out ?>)
-				    .text("<?php echo $out ?>% (<?php echo _("Complete") ?>)");
-			    </script>
-<?php
-			    usleep('500');
-			    ob_end_flush();
-			    //ob_flush();
-			    flush();
-			    ob_start();
-			    clearstatcache(); // make sure PHP actually checks dest. file size
-		    }
-?>
-		    <script type="text/javascript">
-		    $('#DivProgressBar_<?php echo $randnumid; ?> .progress-bar').css('width', '100%').attr('aria-valuenow', '100').text("100% (<?php echo _("Success") ?>)");
-		    </script>
-<?php
-		    return true;
-	    } else {
+                    if ($response === false)
+                    {
+                        $msg_error = sprintf(_("Error Downloading file '%s' (%s): %s"), $url_file, $httpCode, $httpError);
+                    }
+                }
+            }
+        }
 
-		    echo sprintf("<div>"._("Downloading %s ...")."</div>", basename($destination_file));
-		    echo "<div class='progress' style='width:100%'>";
-		    echo "<div class='progress-bar progress-bar-danger progress-bar-striped' role='progressbar' aria-valuenow='100' aria-valuemin='0' aria-valuemax='100' style='width:100%'>0% ("._("Error: ").$headers[0]."!)</div>";
-		    echo "</div>";
+        if (! empty($msg_error))
+        {
+            if ($noException) { return false; }
+            throw new \Exception($msg_error);
+        }
+        return true;
+    }
 
-		    return false;
-	    }
+    
+
+    // TODO: Remove this function, it is not used. Only retrocompatibility.
+    public function download_file_with_progress_bar_old($url_file, $destination_file, &$error = array())
+    {
+        try {
+            $this->download_file_with_progress_bar($url_file, $destination_file);
+        }
+        catch (\Exception $e)
+        {
+            $error['download_file'] = $e->getMessage();
+            return false;
+        }
+        return true;
+    }
+
+    
+    /**
+     * Downloads a file with a progress bar.
+     *
+     * @param string $url_file The URL of the file to download.
+     * @param string $destination_file The destination file path to save the downloaded file.
+     * @param bool $noException Whether to throw an exception if an error occurs during the download process.
+     * @return bool Returns true if the file is downloaded successfully, otherwise throws an exception.
+     * @throws \Exception Throws an exception if there is an error during the download process.
+     */
+    public function download_file_with_progress_bar($url_file, $destination_file, $noException = false)
+    {
+        $msg_error = null;
+		$dir       = dirname($destination_file);
+
+		if(!file_exists($dir))
+        {
+			if (!mkdir($dir, 0777, true))
+            {
+                $msg_error = sprintf(_("Directory could not be created: %s"), $dir);
+            }
+		}
+        if (is_null($msg_error))
+        {
+            if (!is_writable($dir))
+            {
+                $msg_error = sprintf(_("Directory '%s' is not writable! Unable to download files"), $dir);
+            }
+            else
+            {
+                set_time_limit(0);
+                $randnumid  = sprintf("%08d", mt_rand(1, 99999999));
+
+                ?>
+                <div><?= sprintf(_("⚡ Downloading %s ..."), basename($destination_file)) ?></div>
+                    <div id='DivProgressBar_<?= $randnumid ?>' class='progress' style='width:100%'>
+                        <div class='progress-bar progress-bar-striped' role='progressbar' aria-valuenow='0' aria-valuemin='0' aria-valuemax='100' style='width:0%'>";
+                            0% <?= _("(Complete)") ?>
+                    </div>
+                </div>
+                <?php
+
+                $fp = fopen($destination_file, 'w');
+                if ($fp === false)
+                {
+                    $msg_error = sprintf(_("Could not open target file: %s"), $destination_file);
+                }
+                else
+                {
+                    $ch = curl_init($url_file);
+            
+                    curl_setopt($ch, CURLOPT_FILE, $fp);
+                    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                    curl_setopt($ch, CURLOPT_NOPROGRESS, false);
+                    curl_setopt($ch, CURLOPT_PROGRESSFUNCTION, function ($resource, $download_size, $downloaded, $upload_size, $uploaded) use ($randnumid)
+                    {
+                        if ($download_size > 0)
+                        {
+                            $progress = ($downloaded / $download_size) * 100;
+                            $progress = round($progress, 2);
+                            ?>
+                            <script type="text/javascript">
+                            $('#DivProgressBar_<?= $randnumid ?> .progress-bar')
+                                .css('width', '<?= $progress ?>%')
+                                .attr('aria-valuenow', '<?= $progress ?>')
+                                .text("<?= $progress ?>% (<?= _("Complete") ?>)");
+                            </script>
+                            <?php
+                            flush();
+                        }
+                    });
+            
+                    $response  = curl_exec($ch);
+                    $httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                    $httpError = $response === false ? curl_error($ch) : null;
+    
+                    curl_close($ch);
+                    fclose($fp);
+            
+                    if ($response && $httpCode === 200)
+                    {
+                        ?>
+                        <script type="text/javascript">
+                            $('#DivProgressBar_<?= $randnumid ?> .progress-bar').css('width', '100%').attr('aria-valuenow', '100').text("100% (<?= _("Success") ?>)");
+                        </script>
+                        <?php
+                    }
+                    else
+                    {
+                        $msg_error = sprintf(_("Error Downloading file '%s' (%s): %s"), $url_file, $httpCode, $httpError);
+                        ?>
+                        <script type="text/javascript">
+                            $('#DivProgressBar_<?= $randnumid ?> .progress-bar').css('width', '100%').attr('aria-valuenow', '100').text("0% (<?= sprintf(_("Error: HTTP %s"), $httpCode) ?>)");
+                        </script>
+                        <?php
+                    }
+                }
+            }
+        }
+
+        if (!empty($msg_error))
+        {
+            if ($noException) { return false; }
+            throw new \Exception($msg_error);
+        }
+        return true;
     }
 
     /**
@@ -217,7 +418,8 @@ class epm_system {
      * @return array
      * @package epm_system
      */
-    public function arraysearchrecursive($Needle, $Haystack, $NeedleKey="", $Strict=false, $Path=array()) {
+    public function arraysearchrecursive($Needle, $Haystack, $NeedleKey="", $Strict=false, $Path=array())
+    {
         if (!is_array($Haystack))
             return false;
         foreach ($Haystack as $Key => $Val) {
@@ -277,5 +479,393 @@ class epm_system {
             unlink($tempfile);
             return realpath(dirname($tempfile));
         }
+    }
+
+
+
+
+
+
+
+    
+    /**
+     * Decompresses a tar.gz file.
+     *
+     * @param string $tarGzFile The path to the tar.gz file to decompress.
+     * @param string $destinationDir The destination directory where the decompressed files will be placed.
+     * 
+     * @return bool Returns true on success, false on failure.
+     * 
+     * @throws Exception If the tar.gz file cannot be decompressed or if the destination directory cannot be created.
+     */
+    public function decompressTarGz($tarGzFile, $destinationDir)
+    {
+        $fileInfo  = pathinfo($tarGzFile);
+        $extension = $fileInfo['extension'];
+
+        if ($extension === 'tgz')
+        {
+            $tarFile = str_replace('.tgz', '.tar', $tarGzFile);
+        }
+        elseif ($extension === 'gz' && substr($fileInfo['basename'], -7) === '.tar.gz')
+        {
+            $tarFile = str_replace('.tar.gz', '.tar', $tarGzFile);
+        }
+        else
+        {
+            throw new \Exception(sprintf(_("The file does not have a valid extension (.tgz or .tar.gz): %s"), $fileInfo['basename']));
+        }
+        
+        switch ($extension)
+        {
+            case 'tgz':
+                rename($tarGzFile, $tarFile);
+                break;
+
+            case 'gz':
+                $bufferSize = 4096;
+                $gz         = gzopen($tarGzFile, 'rb');
+                $tar        = fopen($tarFile, 'wb');
+
+                if (!$gz || !$tar)
+                {
+                    if (!$gz)
+                    {
+                        throw new \Exception(sprintf(_("Could not open .gz file: %s"), $tarGzFile));
+                    }
+                    if (!$tar)
+                    {
+                        throw new \Exception(sprintf(_("Could not open .tar file: %s"), $tarFile));
+                    }
+                }
+                while (!gzeof($gz))
+                {
+                    fwrite($tar, gzread($gz, $bufferSize));
+                }
+                fclose($tar);
+                gzclose($gz);
+                break;
+        }
+
+        try
+        {
+            $phar = new \PharData($tarFile);
+            $phar->extractTo($destinationDir);
+        }
+        catch (\UnexpectedValueException $e)
+        {
+            throw new \Exception(sprintf(_("Error Reading .tar File: %s"), $e->getMessage()));
+        }
+        catch (\BadMethodCallException $e)
+        {
+            throw new \Exception( sprintf(_("Unsupported Method in phardata: %s"), $e->getMessage()));
+        }
+        catch (\PharException $e)
+        {
+            throw new \Exception(sprintf(_("Error in phardata: %s"), $e->getMessage()));
+        }
+        catch (\Exception $e)
+        {
+            throw $e;
+        }
+        unlink($tarFile);
+        return true;
+    }
+
+
+	/**
+	 * Builds a URL by concatenating multiple path segments.
+	 *
+	 * @param string ...$paths The path segments to concatenate.
+	 * @return string The concatenated path.
+	 */
+	public function buildUrl(...$paths)
+	{
+        $paths = array_filter($paths, function($path) { return !empty($path); });
+        $paths = array_map(function($path) { return trim($path, "/"); }, $paths);
+		$path  = implode("/", $paths);
+		return $path;
+    }
+
+
+	/**
+     * Builds a path by concatenating multiple path segments.
+     *
+     * @param string ...$paths The path segments to concatenate.
+     * @return string The concatenated path.
+     */
+	public function buildPath(...$paths)
+	{
+        $flattenedPaths = [];
+        foreach ($paths as $path)
+        {
+            if (is_array($path))
+            {
+                $flattenedPaths = array_merge($flattenedPaths, $path);
+            }
+            else
+            {
+                $flattenedPaths[] = $path;
+            }
+        }
+
+        $flattenedPaths = array_filter($flattenedPaths, function($path) { return !empty($path); });
+		$initialSeparator = '';
+		if (isset($flattenedPaths[0]) && strpos($flattenedPaths[0], DIRECTORY_SEPARATOR) === 0)
+		{
+			$initialSeparator = DIRECTORY_SEPARATOR;
+		}
+        $flattenedPaths = array_map(function($path) { return trim($path, DIRECTORY_SEPARATOR); }, $flattenedPaths);
+		$path  = implode(DIRECTORY_SEPARATOR, $flattenedPaths);
+		return $initialSeparator . $path;
+    }
+
+
+    /**
+	 * Converts a file to JSON format and returns the decoded data.
+	 *
+	 * @param string $file The path to the file.
+	 * @return mixed The decoded data from the file.
+	 * @throws \Exception If there is an error while decoding the JSON or if the file cannot be found.
+	 */
+    public function file2json($file = null)
+	{
+		if (empty($file))
+		{
+			throw new \Exception(_('No file specified'));
+		}
+        if (file_exists($file))
+		{
+            $data_return = false;
+            $json_data   = file_get_contents($file);
+            $deco_data   = json_decode($json_data, true);
+			switch (json_last_error())
+			{
+				case JSON_ERROR_NONE:
+                    if (!is_array($deco_data))
+                    {
+                        throw new \Exception(_('Invalid JSON data'));
+                    }
+					$data_return = $deco_data;
+					break;
+
+				case JSON_ERROR_DEPTH:
+					throw new \Exception(_('Maximum stack depth exceeded'));
+					break;
+
+				case JSON_ERROR_STATE_MISMATCH:
+					throw new \Exception(_('Underflow or the modes mismatch'));
+					break;
+
+				case JSON_ERROR_CTRL_CHAR:
+					throw new \Exception(_('Unexpected control character found'));
+					break;
+
+				case JSON_ERROR_SYNTAX:
+					throw new \Exception(_('Syntax error, malformed JSON'));
+					break;
+
+				case JSON_ERROR_UTF8:
+					throw new \Exception(_('Malformed UTF-8 characters, possibly incorrectly encoded'));
+					break;
+
+				default:
+					throw new \Exception(_('Unknown error'));
+					break;
+			}
+        }
+		else
+		{
+			throw new \Exception(sprintf(_('Cant find file: %s'), $file));
+        }
+		return $data_return;
+    }
+
+
+    /**
+     * Copies a resource from the source to the destination.
+     *
+     * @param string $src The source path.
+     * @param string $dst The destination path.
+     * @param int $perm The permissions to set on the destination resource.
+     * @param bool $overwrite Whether to overwrite the destination resource if it already exists.
+     * @param bool $ignore_error Whether to ignore errors during the copy process.
+     * @param bool $exception Whether to throw an exception if an error occurs.
+     * @param bool $skip_hidden Whether to skip hidden files and directories.
+     * @return bool Returns true if the resource was copied successfully, false otherwise.
+     * @throws \Exception If an error occurs during the copy process and $exception is true.
+     */
+    public function copyResource($src, $dst, $perm = 0755, $overwrite = false, $ignore_error = true, $exception = false, $skip_hidden = true)
+    {
+        if (empty($src) || empty($dst))
+        {
+            if (!$exception) { return false; }
+            throw new \Exception(_('Source and destination directories must be specified'));
+        }
+
+
+        if (is_dir($src))
+        {
+            if (!is_dir($dst))
+            {
+                if (!mkdir($dst, $perm, true))
+                {
+                    if (!$ignore_error || $exception)
+                    {
+                        throw new \Exception(sprintf(_('Could not create directory: %s'), $dst));    
+                    }
+                    return false;
+                }
+                if (!chmod($dst, $perm))
+                {
+                    if (!$ignore_error || $exception)
+                    {
+                        throw new \Exception(sprintf(_('Could not set permissions on directory: %s'), $dst));
+                    }
+                    return false;
+                }
+            }
+
+            $status_copy = true;
+            $dir = opendir($src);
+            while (false !== ($file = readdir($dir)))
+            {
+                if ($file != '.' && $file != '..')
+                {
+                    // Skip hidden files and directories if $skip_hidden is true
+                    if ($skip_hidden && substr($file, 0, 1) === '.')
+                    {
+                        continue;
+                    }
+                    
+                    $srcPath = $this->buildPath($src, $file);
+                    $dstPath = $this->buildPath($dst, $file);
+
+                    if (! $this->copyResource($srcPath, $dstPath, $perm, $overwrite, $ignore_error, $exception))
+                    {
+                        $status_copy = false;
+                        if (!$ignore_error || $exception)
+                        {
+                            throw new \Exception(sprintf(_('Could not copy directory: %s'), $srcPath));
+                        }
+                    }
+                }
+            }
+            closedir($dir);
+            return $status_copy;
+        } 
+        else
+        {
+            if (file_exists($dst) && !$overwrite)
+            {
+                return true;
+            }
+            if (!copy($src, $dst))
+            {
+                if (!$ignore_error || $exception)
+                {
+                    throw new \Exception(sprintf(_('Could not copy file: %s'), $src));
+                }
+                return false;
+            }
+            if (!chmod($dst, $perm))
+            {
+                if (!$ignore_error || $exception)
+                {
+                    throw new \Exception(sprintf(_('Could not set permissions on file: %s'), $dst));
+                }
+                return false;
+            }
+            return true;
+        }
+    }
+
+
+
+
+
+    /**
+     * Check if the request arguments are present and are of the correct type.
+     * 
+     * @param array $request The request array.
+     * @param array $request_args The required request arguments.
+     * @param array $request_args_int The required request arguments that must be integers.
+     * @return bool|array Returns true if the request arguments are valid, otherwise returns an array with the status and message.
+     */    
+	public function check_request_args(array &$request = array(), ?array $request_args = array(), ?array $request_args_int = array(), bool $trim = true)
+	{
+        if (!is_array($request) || !is_array($request_args) || !is_array($request_args_int))
+        {
+            return false;
+        }
+
+		$args_missing  = array();
+		$args_type_err = array();
+
+		foreach ($request_args as $arg)
+		{
+			if (array_key_exists($arg, $request))
+			{
+                if ($trim && is_string($request[$arg]))
+                {
+                    $request[$arg] = trim($request[$arg]);
+                }
+                continue;
+			}
+			$args_missing[] = $arg;
+		}
+		foreach($request_args_int as $arg)
+		{
+			if (array_key_exists($arg, $request) && !is_numeric($request[$arg]))
+			{
+				$args_type_err[] = $arg;
+			}
+		}
+
+		if ( ! empty($args_missing) || ! empty($args_type_err))
+		{
+			$msg_return = "❌ ";
+			$parts 		= [];
+			if (!empty($args_missing))
+			{
+				$parts[] = sprintf(_("Missing values '%s'"), implode(", ", $args_missing));
+			}
+			if (!empty($args_type_err))
+			{
+				$invalid_msg = sprintf(_("Invalid values '%s'"), implode(", ", $args_type_err));
+				if (!empty($args_missing))
+				{
+					$invalid_msg = lcfirst($invalid_msg);
+				}
+				$parts[] = $invalid_msg;
+			}
+		
+			$msg_return .= implode(_(" and "), $parts);
+			$msg_return .= ".";
+
+			return $msg_return;
+		}
+        return true;
+    }
+
+    /**
+     * This function takes a string and tries to determine if it's a valid mac addess, return FALSE if invalid
+     * 
+     * @param string $mac The full mac address
+     * @return mixed The cleaned up MAC is it was a MAC or False if not a mac
+     */
+    public function mac_check_clean($mac)
+	{
+		// regular expression that validates mac with :, -, spaces, or without separators
+		$pattern = '/^([0-9a-f]{2}[:-]?){5}([0-9a-f]{2})$/i';
+
+		// check if the mac complies with the pattern
+		if (preg_match($pattern, $mac))
+		{
+			// clean the mac of non-hexadecimal characters and convert them to uppercase
+			return strtoupper(preg_replace('/[^0-9a-f]/i', '', $mac));
+		}
+		// return false if not a valid mac address
+		return false;
     }
 }

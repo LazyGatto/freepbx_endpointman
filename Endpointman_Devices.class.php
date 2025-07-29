@@ -9,22 +9,24 @@
 
 namespace FreePBX\modules;
 
+#[\AllowDynamicProperties]
 class Endpointman_Devices
 {
-	public function __construct($freepbx = null, $cfgmod = null) 
+	// public function __construct($freepbx = null, $cfgmod = null) 
+	public function __construct($epm) 
 	{
-		$this->freepbx = $freepbx;
-		$this->db = $freepbx->Database;
-		$this->config = $freepbx->Config;
-		$this->configmod = $cfgmod;			
+		$epm			 = $epm;
+		$this->freepbx   = $epm->freepbx;
+		$this->db 	     = $epm->freepbx->Database;
+		$this->config    = $epm->freepbx->Config;
 	}
 
 	public function myShowPage(&$pagedata) {
 		if(empty($pagedata))
 		{
 			$pagedata['main'] = array(
-					"name" => _("Devices"),
-					"page" => 'views/epm_devices_main.page.php'
+				"name" => _("Devices"),
+				"page" => '/views/epm_devices_main.page.php'
 			);
 		}
 	}
@@ -59,11 +61,9 @@ class Endpointman_Devices
 		return $retarr;
 	}
 	
-	public function doConfigPageInit($module_tab = "", $command = "") {
-		
-	}
+	public function doConfigPageInit($module_tab = "", $command = "") { }
 	
-	public function getRightNav($request) {
+	public function getRightNav($request, $params = array()) {
 		return "";
 	}
 	

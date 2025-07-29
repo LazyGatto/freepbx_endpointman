@@ -9,446 +9,668 @@
 
 namespace FreePBX\modules;
 
+require_once('lib/epm_templates.class.php');
+
 class Endpointman_Templates
 {
-	public function __construct($freepbx = null, $cfgmod = null, $epm_config, $eda) 
+	public $epm;
+	public $freepbx;
+	public $db;
+	public $config;
+	public $epm_config;
+	public $eda;
+	public $templates;
+
+	public function __construct($epm)
 	{
-		$this->freepbx = $freepbx;
-		$this->db = $freepbx->Database;
-		$this->config = $freepbx->Config;
-		$this->configmod = $cfgmod;
-		$this->epm_config = $epm_config;
-		$this->eda = $eda;
+		$this->epm 		  = $epm;
+		$this->freepbx 	  = $epm->freepbx;
+		$this->db 	   	  = $epm->freepbx->Database;
+		$this->config  	  = $epm->freepbx->Config;
+		$this->epm_config = $epm->epm_config;
+		$this->eda 		  = $epm->eda;
+		$this->templates  = new Endpointman\Templates($epm);
 	}
 
-	public function myShowPage(&$pagedata) {
-		if(empty($pagedata))
+	public function ajaxRequest($req, &$setting, array $data)
+	{
+		$allowRequest = array(
+			"list_current_template",
+			"add_template",
+			"del_template",
+			'add_products_list',
+			"model_clone",
+
+			"custom_config_get_gloabl",
+			"custom_config_update_gloabl",
+			"custom_config_reset_gloabl",
+			"list_files_edit"
+		);
+
+		if (in_array(strtolower($req), $allowRequest))
 		{
-			$pagedata['manager'] = array(
-				"name" => _("Current Templates"),
-				"page" => 'views/epm_templates_manager.page.php'
-			);
-			$pagedata['editor'] = array(
-					"name" => _("Template Editor"),
-					"page" => 'views/epm_templates_editor.page.php'
-			);
-		}
-	}
-
-	public function ajaxRequest($req, &$setting) {
-		$arrVal = array("model_clone", "list_current_template", "add_template", "del_template", "custom_config_get_gloabl", "custom_config_update_gloabl", "custom_config_reset_gloabl", "list_files_edit");
-		if (in_array($req, $arrVal)) {
 			$setting['authenticate'] = true;
 			$setting['allowremote'] = false;
 			return true;
 		}
-		else 
-		{
-			return false;
-		}
+		return false;
 	}
 	
-    public function ajaxHandler($module_tab = "", $command = "") 
+    public function ajaxHandler(array $data)
 	{
 		$retarr = "";
-		if ($module_tab == "manager")
+		$txt 	= [];
+
+		if (empty($data) || !is_array($data))
 		{
-			switch ($command)
+			$retarr = array(
+				"status"  => false,
+				"message" => _("Empty data received or data is not foromatted correctly!")
+			);
+		}
+		else
+		{
+			$command_allow  = true;
+			$command 		= $data['command'] 	  ?? '';
+			$module_tab		= $data['module_tab'] ?? '';
+
+			switch($module_tab)
 			{
-				case "list_current_template":
-					$retarr = $this->epm_templates_list_current_templates();
-					break;
-					
-				case "model_clone":
-					$retarr = $this->epm_templates_model_clone();
-					break;
-					
-				case "add_template":
-					$retarr = $this->epm_templates_add_template();
-					break;
-					
-				case "del_template":
-					$retarr = $this->epm_templates_del_template();
-					break;
+				case "manager":
+					switch ($command)
+					{
+						case "list_current_template":
+							$retarr = $this->epm_templates_list_current_templates();
+						break;
+							
+						case "model_clone":
+							$retarr = $this->epm_templates_model_clone($data);
+						break;
+							
+						case "add_template":
+							$retarr = $this->epm_templates_add_template($data);
+						break;
+							
+						case "del_template":
+							$retarr = $this->epm_templates_del_template($data);
+						break;
+						
+						case 'add_products_list':
+							$retarr = $this->epm_templates_add_products_list();
+						break;
+						
+						case 'add_template_list_models':
+						break;
+	
+						default:
+							$command_allow = false;
+					}
+				break;
+
+				case "edit":
+					switch ($command)
+					{
+						case "custom_config_get_gloabl":
+							$retarr = $this->epm_template_custom_config_global($data, "get");
+						break;
+						
+						case "custom_config_update_gloabl":
+							$retarr = $this->epm_template_custom_config_global($data, "set");
+						break;
+						
+						case "custom_config_reset_gloabl":
+							$retarr = $this->epm_template_custom_config_global($data, "reset");
+						break;
+							
+						case "list_files_edit":
+						/*
+							$return = array();
+							$return[] = array('value' => 'va11', 'txt' => 'txt1', 'select' => "OFF");
+							$return[] = array('value' => 'va12', 'txt' => 'txt2', 'select' => "ON");
+							$return[] = array('value' => 'va13', 'txt' => 'txt3', 'select' => "OFF");
+						*/
+							return $this->edit_template_display_files($_REQUEST['idsel'],$_REQUEST['custom'], $_REQUEST['namefile']);
+						break;
+							
+						default:
+							$command_allow = false;
+					}
+				break;
 
 				default:
-					$retarr = array("status" => false, "message" => _("Command not found!") . " [" .$command. "]");
-					break;
+					$retarr = array(
+						"status"  => false,
+						"message" => sprintf(_("Tab '%s' not valid!"), $module_tab)
+					);
 			}
-		}
-		elseif ($module_tab == "editor")
-		{
-			switch ($command)
+
+			if (! $command_allow)
 			{
-				case "custom_config_get_gloabl":
-					$retarr = $this->epm_template_custom_config_get_global();
-					break;
-				
-				case "custom_config_update_gloabl":
-					$retarr = $this->epm_template_custom_config_update_global();
-					break;
-				
-				case "custom_config_reset_gloabl":
-					$retarr = $this->epm_template_custom_config_reset_global();
-					break;
-					
-				case "list_files_edit":
-				/*
-					$return = array();
-					$return[] = array('value' => 'va11', 'txt' => 'txt1', 'select' => "OFF");
-					$return[] = array('value' => 'va12', 'txt' => 'txt2', 'select' => "ON");
-					$return[] = array('value' => 'va13', 'txt' => 'txt3', 'select' => "OFF");
-				*/
-					return $this->edit_template_display_files($_REQUEST['idsel'],$_REQUEST['custom'], $_REQUEST['namefile']);
-					break;
-					
-				default:
-					$retarr = array("status" => false, "message" => _("Command not found!") . " [" .$command. "]");
-					break;
+				$retarr = array(
+					"status"  => false,
+					"message" => sprintf(_("Command '%s' not found!"), $command)
+				);
 			}
-		}
-		else {
-			$retarr = array("status" => false, "message" => _("Tab not found!") . " [" .$module_tab. "]");
+			else
+			{
+				if (! empty($txt[strtolower($module_tab)]))
+				{
+					$retarr['txt'] = $txt[strtolower($module_tab)];
+				}
+			}
 		}
 		return $retarr;
 	}
 	
-	public function doConfigPageInit($module_tab = "", $command = "") {
-		
-	}
+	public function doConfigPageInit($module_tab = "", $command = "") { }
 	
-	public function getRightNav($request) {
-		if(isset($request['subpage']) && $request['subpage'] == "editor") {
-			return load_view(__DIR__."/views/epm_templates/editor.views.rnav.php",array());
-		} else {
-			return '';
+	public function myShowPage(array &$pagedata, array $data)
+	{
+		if(empty($pagedata))
+		{
+			$pagedata['manager'] = array(
+				"name" => _("Current Templates"),
+				"page" => '/views/epm_templates_manager.page.php'
+			);
+			$pagedata['edit'] = array(
+				"name" => _("Template Editor"),
+				"page" => '/views/epm_templates_editor.page.php'
+			);
 		}
 	}
+
+	public function getRightNav($request, $params = array())
+	{
+		$data_return = "";
+		if(isset($request['subpage']) && $request['subpage'] == "edit")
+		{
+			$data_return = load_view(__DIR__."/views/epm_templates/editor.views.rnav.php", $params);
+		}
+		return $data_return;
+	}
 	
-	public function getActionBar($request) {
+	public function getActionBar($request)
+	{
 		$buttons = array();
-        switch($request['subpage']) {
-            case 'editor':
+        switch(strtolower($request['subpage']))
+		{
+            case 'edit':
                 $buttons = array(
 					'delete' => array(
-                        'name' => 'delete',
-                        'id' => 'delete',
-                        'value' => _('Delete'),
+                        'name' 	 => 'delete',
+                        'id' 	 => 'delete',
+                        'value'  => _('Delete'),
                         'hidden' => ''
                     ),
 					'save' => array(
-                        'name' => 'submit',
-                        'id' => 'save',
-                        'value' => _('Save'),
+                        'name' 	 => 'submit',
+                        'id' 	 => 'save',
+                        'value'  => _('Save'),
                         'hidden' => ''
                     )
                 );
 				
-				if(empty($request['idsel']) && empty($request['custom'])){
-					$buttons = NULL;
+				if(empty($request['idsel']) && empty($request['custom']))
+				{
+					$buttons = "";
 				}
             	break;
-				
-			default:
         }
         return $buttons;
 	}
 	
-	
-	
-	
-	
-	
-	public function epm_template_custom_config_get_global()
+	public function showPage(array &$data)
 	{
-		if (! isset($_REQUEST['custom'])) {
-			$retarr = array("status" => false, "message" => _("No send Custom Value!"));
-		}
-		elseif (! isset($_REQUEST['tid'])) {
-			$retarr = array("status" => false, "message" => _("No send TID!"));
-		}
-		elseif (! is_numeric($_REQUEST['tid'])) {
-			$retarr = array("status" => false, "message" => _("TID is not number!"));
-		}
-		else 
-		{
-			$dget['custom'] = $_REQUEST['custom'];
-			$dget['tid'] = $_REQUEST['tid'];
-			
-			if($dget['custom'] == 0) {
-				//This is a group template
-		        $sql = 'SELECT global_settings_override FROM endpointman_template_list WHERE id = '.$dget['tid'];
-			} else {
-				//This is an individual template
-		        $sql = 'SELECT global_settings_override FROM endpointman_mac_list WHERE id = '.$dget['tid'];;
-			}
-			$settings = sql($sql, 'getOne');
+		// $data['showpage'] = $this->myShowPage();
+		$tabs = array(
+			'manager' => array(
+				"name" => _("Current Templates"),
+				"page" => '/views/epm_templates_manager.page.php'
+			),
+			'edit' => array(
+				"name" => _("Template Editor"),
+				"page" => '/views/epm_templates_editor.page.php'
+			),
+		);
 
-			if ((isset($settings)) and (strlen($settings) > 0)) {
-				$settings = unserialize($settings);
-				//$settings['tz'] = FreePBX::Endpointman()->listTZ(FreePBX::Endpointman()->configmod->get("tz"));
-			} 
-			else {
-				$settings['srvip'] = ""; //$this->configmod->get("srvip");
-				$settings['ntp'] = ""; //$this->configmod->get("ntp");
-				$settings['config_location'] = ""; //$this->configmod->get("config_location");
-				$settings['tz'] = $this->configmod->get("tz");
-				$settings['server_type'] = $this->configmod->get("server_type");
-			}
-    		
-			$retarr = array("status" => true, "settings" => $settings, "message" => _("Global Config Read OK!"));
-			unset($dget);
+		$data['subpage'] = $data['request']['subpage'] ?? '';
+		if (! in_array($data['subpage'], array_keys($tabs)))
+		{
+			$data['subpage'] = 'manager';
 		}
-		return $retarr;
+
+		$data['command']  = $data['request']['command'] ?? '';
+		$data['id']  	  = $data['request']['id'] ?? '';
+		$data['custom']	  = $data['request']['custom'] ?? '';
+
+		$data['product_list']  = sql("SELECT * FROM endpointman_product_list WHERE id > 0", 'getAll', \PDO::FETCH_ASSOC);
+		$data['mac_list']      = sql("SELECT * FROM endpointman_mac_list", 'getAll', \PDO::FETCH_ASSOC);
+
+
+
+		$data['main']['warning']['no_modules_install']			= (empty($data['product_list']) && empty($data['mac_list']));
+		$data['main']['warning']['update_from_ver_previous_2']	= empty($data['product_list']);
+
+		
+
+		foreach($tabs as $key => &$page)
+		{
+			if ($data['subpage'] != $key)
+			{
+				continue;
+			}
+
+			$data_tab = array();
+			switch($key)
+			{
+				case 'manager':
+					$data_tab['config']['url_grid'] = "ajax.php?module=endpointman&amp;module_sec=epm_templates&amp;module_tab=manager&amp;command=list_current_template";
+				break;
+
+				case 'edit':
+					$data_tab['custom']		  = $data['request']['custom'] ?? '';
+					$data_tab['id_template']  = $data['request']['idsel'] ?? null;
+					$data_tab['missing_data'] = $data_tab['custom'] == "" || empty($data_tab['id_template']);
+
+					// $data_tab['edit_template_display'] = $this->epm_templates->edit_template_display($data_tab['idsel'], $data['custom']);
+				break;
+			}
+			$data_tab = array_merge($data, $data_tab);
+
+			$page['content'] = load_view($this->epm->system->buildPath(__DIR__, $page['page']), $data_tab);
+		}
+		$data['tabs'] = $tabs;
+		unset($tabs);
+		
 	}
 	
 	
-	public function epm_template_custom_config_update_global ()
+	/**** FUNCIONES SEC MODULO "epm_template\editor" Dialog Config Global ****/
+	public function epm_template_custom_config_global(array $data, string $action)
 	{
-		if (! isset($_REQUEST['custom'])) {
-			$retarr = array("status" => false, "message" => _("No send Custom Value!"));
-		}
-		elseif (! isset($_REQUEST['tid'])) {
-			$retarr = array("status" => false, "message" => _("No send TID!"));
-		}
-		elseif (! is_numeric($_REQUEST['tid'])) {
-			$retarr = array("status" => false, "message" => _("TID is not number!"));
-		}
-		else 
+		if (! in_array($action, array("get","set","reset")))
 		{
-			$dget['custom'] = $_REQUEST['custom'];
-			$dget['tid'] = $_REQUEST['tid'];
-			
-			
-			$_REQUEST['srvip'] = trim($_REQUEST['srvip']);  #trim whitespace from IP address
-			$_REQUEST['config_loc'] = trim($_REQUEST['config_loc']);  #trim whitespace from Config Location
-	
-			$settings_warning = "";
-			if (strlen($_REQUEST['config_loc']) > 0) {
-				//No trailing slash. Help the user out and add one :-)
-				if($_REQUEST['config_loc'][strlen($_REQUEST['config_loc'])-1] != "/") {
-					$_REQUEST['config_loc'] = $_REQUEST['config_loc'] ."/";
-				}
-				
-				if((isset($_REQUEST['config_loc'])) AND ($_REQUEST['config_loc'] != "")) {
-					if((file_exists($_REQUEST['config_loc'])) AND (is_dir($_REQUEST['config_loc']))) {
-						if(is_writable($_REQUEST['config_loc'])) {
-							$_REQUEST['config_loc'] = $_REQUEST['config_loc'];
-						} else {
-							$settings_warning = _("Directory Not Writable!");
-							$_REQUEST['config_loc'] = $this->configmod->get('config_location');
-						}
-					} else {
-						$settings_warning = _("Not a Vaild Directory");
-						$_REQUEST['config_loc'] = $this->configmod->get('config_location');
+			return array("status" => false, "message" => sprintf(_("Action '%s' not valid!"), $action));
+		}
+
+		$request 		  = $data['request'] ?? [];
+		$request_args 	  = array("tid", "custom");
+		$request_args_int = array("tid");
+		$args_check 	  = $this->epm->system->check_request_args($request, $request_args, $request_args_int);
+
+		switch(true)
+		{
+			case (empty($args_check)):
+			case ($args_check === false):
+				return array("status" => false, "message" => _("Error in the process of checking the request arguments!"));
+
+			case ($args_check === true):
+				break;
+
+			case (is_string($args_check)):
+			default:
+				return array("status" => false, "message" => $args_check);
+		}
+
+		$tid 	= $request['tid'];
+		$custom = $request['custom'];
+		$msgerr = null;
+
+		if (empty($tid))
+		{
+			$msgerr = _("Template ID is not valid, the value is empty!");
+		}
+		else if (! is_numeric($tid))
+		{
+			$msgerr = sprintf(_("Template ID '%s' is not valid, the value is not a number!"), $tid);
+		}
+		else if ($tid < 1)
+		{
+			$msgerr = _("Template ID is not valid, the value is less than 1!");
+		}
+		if (! empty($msgerr))
+		{
+			return array("status" => false, "message" => $msgerr);
+		}
+
+		$return_data = [];
+		switch($action)
+		{
+			case "get":
+				$custom   = $custom == 1 ? true : false;
+				$settings = $this->templates->getConfigGlobal($tid, $custom);
+		
+				$settings['srvip'] 			 = $settings['srvip'] 			?? ""; 		//$this->epm->getConfig("srvip");
+				$settings['ntp'] 			 = $settings['ntp'] 			?? "";		//$this->epm->getConfig("ntp");
+				$settings['config_location'] = $settings['config_location'] ?? ""; 		//$this->epm->getConfig("config_location");
+				$settings['tz'] 		 	 = $settings['tz'] 				?? $this->epm->getConfig("tz");
+				$settings['server_type'] 	 = $settings['server_type'] 	?? $this->epm->getConfig("server_type");
+		
+				$return_data['message']  = _("Global Config Read OK!");
+				$return_data['settings'] = $settings;
+			break;
+
+			case "set":
+
+				$data_new = $request['new_data'] ?? [];
+				$data_new_args = array(
+					"srvip" => [				// Request Name, data in $request['new_data']
+						"type" => "ip",			// Type of Data
+						'bd'   => "srvip",		// Name of the BD
+					],
+					"config_loc" => [
+						"type" => "path",
+						'bd'   => "config_location",
+					],
+					"server_type" => [
+						"type" => "string",
+						'bd'   => "server_type",
+					],
+					"ntp_server" => [
+						"type" => "ip/hostname",
+						'bd'   => "ntp",
+					],
+					"tz" => [
+						"type" => "timezone",
+						'bd'   => "tz",
+					]
+				);
+
+				$settings_warning = null;
+				$settings = [];
+				foreach ($data_new_args as $arg => $value)
+				{
+					$settings[$value['bd']] = "";
+					if (empty($data_new[$arg]))
+					{
+						continue;
 					}
-				} else {
-					$settings_warning = _("No Configuration Location Defined!");
-					$_REQUEST['config_loc'] = $this->configmod->get('config_location');
+					switch($value['type'])
+					{
+						case "ip":
+						case "ip/hostname":
+							$ip = trim($data_new[$arg]);
+							if (! empty($ip))
+							{
+								$settings[$value['bd']] = $ip;
+							}
+						break;
+
+						case "path":
+							$path = trim($data_new[$arg]);
+							$config_loc = $this->epm->system->buildPath($path);
+							switch (true)
+							{
+								case empty($config_loc):
+									$settings_warning = _("Skip Firmware Directory: No Directory Specified!");
+								break;
+
+								case (! file_exists($config_loc)):
+								case (! is_dir($config_loc)):
+									$settings_warning = _("Skip Firmware Directory: Not a Valid Directory!");
+								break;
+
+								case (! is_writable($config_loc)):
+									$settings_warning = _("Skip Firmware Directory: Directory Not Writable!");
+								break;
+								default:
+									$settings[$value['bd']] = $config_loc;
+							}
+
+						break;
+
+						case "string":
+							$settings[$value['bd']] = $data_new[$arg] ?? "";
+						break;
+					
+						case "timezone":
+							$timezone = trim($data_new[$arg]);
+							try
+							{
+								new \DateTimeZone($timezone);
+								$settings[$value['bd']] = $timezone;
+							}
+							catch (\Exception $e)
+							{
+								continue 2;
+							}
+						break;
+					}
 				}
-			}
-			
-			$settings['config_location'] = $_REQUEST['config_loc'];
-			$settings['server_type'] = (isset($_REQUEST['server_type']) ? $_REQUEST['server_type'] : "");	//REVISAR NO ESTABA ANTES
-			$settings['srvip'] = (isset($_REQUEST['srvip']) ? $_REQUEST['srvip'] : "");
-			$settings['ntp'] = (isset($_REQUEST['ntp_server']) ? $_REQUEST['ntp_server'] : "");
-			$settings['tz'] = (isset($_REQUEST['tz']) ? $_REQUEST['tz'] : "");
-			$settings_ser = serialize($settings);
-			unset($settings);
-			
-			if($dget['custom'] == 0) {
-				//This is a group template
-				$sql = "UPDATE endpointman_template_list SET global_settings_override = '".addslashes($settings_ser)."' WHERE id = ".$dget['tid'];
-			} else {
-				//This is an individual template
-				$sql = "UPDATE endpointman_mac_list SET global_settings_override = '".addslashes($settings_ser)."' WHERE id = ".$dget['tid'];
-			}
-			unset($settings_ser);
-			sql($sql);
-			
-			if (strlen($settings_warning) > 0) { $settings_warning = " ".$settings_warning; }
-			$retarr = array("status" => true, "message" => _("Updated!").$settings_warning);
-			unset($dget);
+
+				$this->templates->setConfigGlobal($tid, $custom, $settings);
+				$return_data['message'] = sprintf("%s%s", _("Updated!"), empty($settings_warning) ? "" : " ".$settings_warning);
+			break;
+
+			case "reset":
+				$this->templates->setConfigGlobal($tid, $custom);
+				$return_data['message'] = _("Globals Reset to Default!");
+			break;
 		}
-		return $retarr;
-	}
-	
-	
-	public function epm_template_custom_config_reset_global()
-	{
-		if (! isset($_REQUEST['custom'])) {
-			$retarr = array("status" => false, "message" => _("No send Custom Value!"));
-		}
-		elseif (! isset($_REQUEST['tid'])) {
-			$retarr = array("status" => false, "message" => _("No send TID!"));
-		}
-		elseif (! is_numeric($_REQUEST['tid'])) {
-			$retarr = array("status" => false, "message" => _("TID is not number!"));
-		}
-		else 
-		{
-			$dget['custom'] = $_REQUEST['custom'];
-			$dget['tid'] = $_REQUEST['tid'];
-			
-			if($dget['custom'] == 0) {
-				//This is a group template
-				$sql = "UPDATE endpointman_template_list SET global_settings_override = NULL WHERE id = ".$dget['tid'];
-			} else {
-				//This is an individual template
-				$sql = "UPDATE endpointman_mac_list SET global_settings_override = NULL WHERE id = ".$dget['tid'];
-			}
-			sql($sql);
-			
-			$retarr = array("status" => true, "message" => _("Globals Reset to Default!"));
-			unset($dget);
-		}
-		return $retarr;
+
+		$return_data['status']  = true;
+		$return_data['action']  = $action;
+		return $return_data;
 	}
 	
 	
 	
 	
 	/**** FUNCIONES SEC MODULO "epm_template\manager" ****/
-	public function epm_templates_del_template() 
+	public function epm_templates_model_clone (array $data) 
 	{
-		if (! isset($_REQUEST['idsel'])) {
-			$retarr = array("status" => false, "message" => _("No send ID!"));
-		}
-		elseif (! is_numeric($_REQUEST['idsel'])) {
-			$retarr = array("status" => false, "message" => _("ID is not number!"));
-		}
-		elseif ($_REQUEST['idsel'] <= 0) {
-			$retarr = array("status" => false, "message" => _("ID send is negative!"));
-		}
-		else {
-			$dget['idsel'] = $_REQUEST['idsel'];
-			
-			$sql = "DELETE FROM endpointman_template_list WHERE id = ". $dget['idsel'];
-			sql($sql);
-			$sql = "UPDATE endpointman_mac_list SET template_id = 0 WHERE template_id = ".$dget['idsel'];
-			sql($sql);
-			
-			$retarr = array("status" => true, "message" => _("Delete Template OK!"));
-			unset($dget);
-		}
-		return $retarr;
-	}
-	
-	public function epm_templates_add_template ()
-	{
-		$arrVal['VAR_REQUEST'] = array("newnametemplate", "newproductselec", "newclonemodel");
-		foreach ($arrVal['VAR_REQUEST'] as $valor) {
-			if (! array_key_exists($valor, $_REQUEST)) {
-				return array("status" => false, "message" => _("No send value!")." [".$valor."]");
-			}
-		}
-		
-		$arrVal['VAR_IS_NUM'] = array("newproductselec", "newclonemodel");
-		foreach ($arrVal['VAR_IS_NUM'] as $valor) {
-			if (! is_numeric($_REQUEST[$valor])) {
-				return array("status" => false, "message" => _("Value send is not number!")." [".$valor."]");
-			}
-		}
-		
-		if (empty($_REQUEST['newnametemplate'])) {
-			$retarr = array("status" => false, "message" => _("Name is null!"));
-		}
-		elseif ($_REQUEST['newproductselec'] <= 0) {
-			$retarr = array("status" => false, "message" => _("Product send is negative!"));
-		}
-		elseif ($_REQUEST['newclonemodel'] <= 0) {
-			$retarr = array("status" => false, "message" => _("Clone Model send is negative!"));
-		}
-		else {
-			$dget['newnametemplate'] = $_REQUEST['newnametemplate'];
-			$dget['newproductselec'] = $_REQUEST['newproductselec'];
-			$dget['newclonemodel'] = $_REQUEST['newclonemodel'];
+		$request 		  = $data['request'] ?? [];
+		$request_args 	  = array("product_select");
+		$request_args_int = array("product_select");
+		$args_check 	  = $this->epm->system->check_request_args($request, $request_args, $request_args_int);
 
-			$db = $this->db;
-			$sql = "INSERT INTO endpointman_template_list (product_id, name, model_id) VALUES (?,?,?)";
-			$q = $db->prepare($sql);
-			$ob = $q->execute(array($dget['newproductselec'], addslashes($dget['newnametemplate']), $dget['newclonemodel']));
-			$newid = $db->lastInsertId();
-			//$this->edit_template_display($newid,0);
-			
-			$retarr = array("status" => true, "message" => _("Add New Template OK!"), "newid" => $newid);
-			unset($dget);
+		switch(true)
+		{
+			case (empty($args_check)):
+			case ($args_check === false):
+				return array("status" => false, "message" => _("Error in the process of checking the request arguments!"));
+
+			case ($args_check === true):
+				break;
+
+			case (is_string($args_check)):
+			default:
+				return array("status" => false, "message" => $args_check);
 		}
-		return $retarr;
-	}
-	
-	public function epm_templates_model_clone () 
-	{
-		if (! isset($_REQUEST['id'])) {
-			$retarr = array("status" => false, "message" => _("No send ID!"));
-		}
-		elseif (! is_numeric($_REQUEST['id'])) {
-			$retarr = array("status" => false, "message" => _("ID send is not number!"));
-		}
-		elseif ($_REQUEST['id'] <= 0) {
-			$retarr = array("status" => false, "message" => _("ID send is number not valid!"));
+
+		$product_select = $request['product_select'];
+
+		if ($product_select < 1)
+		{
+			$retarr = array("status" => false, "message" => _("Product ID is not valid, the value is less than 1!"));
 		}
 		else
 		{
-			$dget['id'] = $_REQUEST['id'];
-			
-			$i=0;
-			$out = array();
-			$sql = "SELECT endpointman_model_list.id, endpointman_model_list.model as model FROM endpointman_model_list, endpointman_product_list WHERE endpointman_product_list.id = endpointman_model_list.product_id AND endpointman_model_list.enabled = 1 AND endpointman_model_list.hidden = 0 AND product_id = '". $dget['id']."'";
-			$result = sql($sql,'getAll', DB_FETCHMODE_ASSOC);
-			foreach($result as $row) {
-				$out[$i]['optionValue'] = $row['id'];
-				$out[$i]['optionDisplay'] = $row['model'];
-				$i++;
+			$out = [];
+
+			$out[] = array(
+				'id'   		=> '',
+				'name' 		=> _("None"),
+				'is_select' => true,
+			);
+			$sql = sprintf("SELECT endpointman_model_list.id, endpointman_model_list.model as model FROM endpointman_model_list, endpointman_product_list WHERE endpointman_product_list.id = endpointman_model_list.product_id AND endpointman_model_list.enabled = 1 AND endpointman_model_list.hidden = 0 AND product_id = '%s'", $product_select);
+			$result = sql($sql,'getAll', \PDO::FETCH_ASSOC);
+			foreach($result as $row)
+			{
+				$out[] = array(
+					'id' 		=> $row['id'],
+					'name'  	=> $row['model'],
+					'is_select' => false,
+				);
 			}
-			$retarr = array("status" => true, "message" => _("Generate list Ok!"), "listopt" => $out);
-			
-			unset($dget);
+			$retarr = array(
+				"status"  => true,
+				"message" => _("Generate list Ok!"),
+				"options" => $out,
+				"count"   => count($out),
+			);
 		}
 		return $retarr;
+	}
+
+	public function epm_templates_add_template (array $data)
+	{
+		$request 		  = $data['request'] ?? [];
+		$data_new 		  = $request['new_template'] ?? [];
+		$request_args 	  = array("name", "product", "model");
+		$request_args_int = array("product", "model");
+		$args_check 	  = $this->epm->system->check_request_args($data_new, $request_args, $request_args_int);
+
+		switch(true)
+		{
+			case (empty($args_check)):
+			case ($args_check === false):
+				return array("status" => false, "message" => _("Error in the process of checking the request arguments!"));
+
+			case ($args_check === true):
+				break;
+
+			case (is_string($args_check)):
+			default:
+				return array("status" => false, "message" => $args_check);
+		}
+
+		$template_name  = $data_new['name'];
+		$product_select = $data_new['product'];
+		$model_select   = $data_new['model'];
+
+		if ($product_select < 1)
+		{
+			$retarr = array("status" => false, "message" => _("Product ID is not valid, the value is less than 1!"));
+		}
+		else if ($model_select < 1)
+		{
+			$retarr = array("status" => false, "message" => _("Model ID is not valid, the value is less than 1!"));
+		}
+
+		$sql = "INSERT INTO endpointman_template_list (product_id, name, model_id) VALUES (?, ?, ?)";
+		$q = $this->db->prepare($sql);
+		$q->execute(array($product_select, addslashes($template_name), $model_select));
+		$newid = $this->db->lastInsertId();
+		//$this->edit_template_display($newid,0);
+		
+		$retarr = array(
+			"status"		 => true,
+			"message"		 => _("New Template Created Successfully!"),
+			"redirect"		 => sprintf("config.php?display=%s&subpage=edit&custom=0&idsel=%s", $request['module_sec'], $newid),
+			"redirect_delay" => 500,
+			"newid"			=> $newid
+		);
+		return $retarr;
+	}
+
+	public function epm_templates_del_template(array $data)
+	{
+		$request 		  = $data['request'] ?? [];
+		$request_args 	  = array("id_template");
+		$request_args_int = array("id_template");
+		$args_check 	  = $this->epm->system->check_request_args($request, $request_args, $request_args_int);
+
+		switch(true)
+		{
+			case (empty($args_check)):
+			case ($args_check === false):
+				return array("status" => false, "message" => _("Error in the process of checking the request arguments!"));
+
+			case ($args_check === true):
+				break;
+
+			case (is_string($args_check)):
+			default:
+				return array("status" => false, "message" => $args_check);
+		}
+
+		$id_template = $request['id_template'];
+
+		if ($id_template < 1)
+		{
+			return array("status" => false, "message" => _("Template ID is not valid, the value is less than 1!"));
+		}
+
+		$sql = sprintf("DELETE FROM endpointman_template_list WHERE id = %s", $id_template);
+		sql($sql);
+		$sql = sprintf("UPDATE endpointman_mac_list SET template_id = 0 WHERE template_id = %s", $id_template);
+		sql($sql);
+			
+		return array(
+			"status"  => true,
+			"message" => _("Delete Template Successfully!")
+		);
 	}
 	
 	public function epm_templates_list_current_templates ()
 	{
 	
-		$sql = 'SELECT endpointman_template_list.*, endpointman_product_list.short_name as model_class, endpointman_model_list.model as model_clone, endpointman_model_list.enabled FROM endpointman_template_list, endpointman_model_list, endpointman_product_list WHERE endpointman_model_list.hidden = 0 AND endpointman_template_list.model_id = endpointman_model_list.id AND endpointman_template_list.product_id = endpointman_product_list.id';
-		$template_list = sql($sql, 'getAll', DB_FETCHMODE_ASSOC);
-		$i = 0;
+		$sql = 'SELECT 
+					endpointman_template_list.*,
+					endpointman_product_list.short_name as model_class,
+					endpointman_model_list.model as model_clone,
+					endpointman_model_list.enabled
+						FROM
+							endpointman_template_list,
+							endpointman_model_list,
+							endpointman_product_list
+								WHERE
+									endpointman_model_list.hidden = 0 AND
+									endpointman_template_list.model_id = endpointman_model_list.id AND
+									endpointman_template_list.product_id = endpointman_product_list.id
+				';
+
+		$template_list = sql($sql, 'getAll', \PDO::FETCH_ASSOC);
+
 		$row_out = array();
-		foreach($template_list as $row) {
-			$row_out[$i] = $row;
-			$row_out[$i]['custom'] = 0;
-			if(!$row['enabled']) {
-				$row_out[$i]['model_clone'] = $row_out[$i]['model_clone'];
-			}
-			$i++;
+		foreach($template_list as $row)
+		{
+			$row['custom'] = 0;
+
+			// TODO: Check if this is needed
+			// if(!$row['enabled']) {
+			// 	$row['model_clone'] = $row['model_clone'];
+			// }
+			$row_out[] = $row;
+		}
+
+		$sql = 'SELECT
+					endpointman_mac_list.mac,
+					endpointman_mac_list.id,
+					endpointman_mac_list.model,
+					endpointman_model_list.model as model_clone,
+					endpointman_product_list.short_name as model_class
+						FROM
+							endpointman_mac_list,
+							endpointman_model_list,
+							endpointman_product_list
+								WHERE
+									endpointman_product_list.id = endpointman_model_list.product_id AND
+									endpointman_mac_list.global_custom_cfg_data IS NOT NULL AND
+									endpointman_model_list.id = endpointman_mac_list.model AND
+									endpointman_mac_list.template_id = 0
+				';
+
+		$template_list = sql($sql, 'getAll', \PDO::FETCH_ASSOC);
+		foreach($template_list as $row)
+		{
+			$sql		 = sprintf('SELECT description, line FROM endpointman_line_list WHERE mac_id = %s ORDER BY line ASC', $row['id']);
+			$line_list	 = sql($sql, 'getAll', \PDO::FETCH_ASSOC);
+
+			$descriptions = array_map(function($line_row) { return $line_row['description']; }, $line_list);
+			$description  = implode(', ', $descriptions);
+
+			$row['custom'] 		= 1;
+			$row['name'] 		= $row['mac'];
+			$row['description'] = $description;
+			$row_out[]			= $row;
 		}
 		
-		$sql = 'SELECT endpointman_mac_list.mac, endpointman_mac_list.id, endpointman_mac_list.model, endpointman_model_list.model as model_clone, endpointman_product_list.short_name as model_class FROM endpointman_mac_list, endpointman_model_list, endpointman_product_list WHERE  endpointman_product_list.id = endpointman_model_list.product_id AND endpointman_mac_list.global_custom_cfg_data IS NOT NULL AND endpointman_model_list.id = endpointman_mac_list.model AND endpointman_mac_list.template_id = 0';
-		$template_list = sql($sql, 'getAll', DB_FETCHMODE_ASSOC);
-		foreach($template_list as $row) {
-			$sql = 'SELECT  description , line FROM  endpointman_line_list WHERE  mac_id ='. $row['id'].' ORDER BY line ASC';
-			$line_list = sql($sql, 'getAll', DB_FETCHMODE_ASSOC);
-			$description = "";
-			$c = 0;
-			foreach($line_list as $line_row) {
-				if($c > 0) {
-					$description .= ", ";
-				}
-				$description .= $line_row['description'];
-				$c++;
-			}
-			$row_out[$i] = $row;
-			$row_out[$i]['custom'] = 1;
-			$row_out[$i]['name'] = $row['mac'];
-			$row_out[$i]['description'] = $description;
-			$i++;
-		}
-		
-	/*
+		/*
 		//$sql = 'SELECT endpointman_oui_list.id, endpointman_oui_list.oui , endpointman_brand_list.name, endpointman_oui_list.custom FROM endpointman_oui_list , endpointman_brand_list WHERE endpointman_oui_list.brand = endpointman_brand_list.id ORDER BY endpointman_oui_list.oui ASC';
 		$sql = 'SELECT T1.id, T1.oui, T2.name, T1.custom FROM endpointman_oui_list as T1 , endpointman_brand_list as T2 WHERE T1.brand = T2.id ORDER BY T1.oui ASC';
-		$data = sql($sql, 'getAll', DB_FETCHMODE_ASSOC);
+		$data = sql($sql, 'getAll', \PDO::FETCH_ASSOC);
 		$ret = array();
 		foreach ($data as $item) {
 			$ret[] = array('id' => $item['id'], 'oui' => $item['oui'], 'brand' => $item['name'], 'custom' => $item['custom']);
@@ -457,12 +679,39 @@ class Endpointman_Templates
 		return $row_out;
 	}
 	
+	public function epm_templates_add_products_list()
+	{
+		$products = [];
+		$products[] = array(
+			'id'   		=> '',
+			'name' 		=> _("None"),
+			'is_select' => true,
+		);
+
+		foreach($this->epm->packagesdb->getProductsByModelsEnabled(false, false) as $row)
+		{
+			$products[] = array(
+				'id'   		=> $row->getId(),
+				'name' 		=> $row->getShortName(),
+				'is_select' => false,
+			);
+		}
+		
+		return array(
+			"status"  => true,
+			"message" => "OK",
+			"options" => $products,
+			"count"   => count($products)
+		);
+	}
 	
 	
 	
 	
 	
-	
+
+
+
 	
 	
 	function edit_template_display_files($id, $custom, $namefile = "")
@@ -483,7 +732,7 @@ class Endpointman_Templates
 		} else {
 			$sql = "SELECT endpointman_model_list.max_lines, endpointman_model_list.model as model_name, endpointman_mac_list.global_custom_cfg_data, endpointman_product_list.config_files, endpointman_mac_list.*, endpointman_line_list.*, endpointman_model_list.id as model_id, endpointman_model_list.template_data, endpointman_product_list.id as product_id, endpointman_product_list.short_name, endpointman_product_list.cfg_dir, endpointman_brand_list.directory FROM endpointman_brand_list, endpointman_mac_list, endpointman_model_list, endpointman_product_list, endpointman_line_list WHERE endpointman_mac_list.id=" . $id . " AND endpointman_mac_list.id = endpointman_line_list.mac_id AND endpointman_mac_list.model = endpointman_model_list.id AND endpointman_model_list.brand = endpointman_brand_list.id AND endpointman_model_list.product_id = endpointman_product_list.id";
 		}
-		$row = sql($sql, 'getRow', DB_FETCHMODE_ASSOC);
+		$row = sql($sql, 'getRow', \PDO::FETCH_ASSOC);
 		
 		
 		if ($row['config_files_override'] == "") {
@@ -509,9 +758,9 @@ class Endpointman_Templates
 			$only_configs[$b]['select'] = "ON";
 			
 			$sql = "SELECT * FROM  endpointman_custom_configs WHERE product_id = '" . $row['product_id'] . "' AND original_name = '" . $files . "'";
-			$alt_configs_list = sql($sql, 'getAll', DB_FETCHMODE_ASSOC );
+			$alt_configs_list = sql($sql, 'getAll', \PDO::FETCH_ASSOC );
 			
-			if ( count($alt_configs_list) > 0) 
+			if ( count(array($alt_configs_list)) > 0) 
 			{
 				$files = str_replace(".", "_", $files);
 				foreach ($alt_configs_list as $ccf) 
@@ -548,17 +797,24 @@ class Endpointman_Templates
     		$sql = "SELECT model FROM endpointman_mac_list WHERE id=" . $id;
     	}
     	$model_id = sql($sql, 'getOne');
-    	if (!$this->epm_config->sync_model($model_id)) {
-    		die("unable to sync local template files - TYPE:" . $custom);
-    	}
+
+
+		//TODO: He comentado esto ya que sync-model ya no existe!!!!!!!
+    	// if (!$this->epm_config->sync_model($model_id)) {
+    	// 	die("unable to sync local template files - TYPE:" . $custom);
+    	// }
 		
 
-		if ($custom == 0) {
-			$sql = "SELECT endpointman_model_list.max_lines, endpointman_model_list.model as model_name, endpointman_template_list.global_custom_cfg_data,  endpointman_product_list.config_files, endpointman_product_list.short_name, endpointman_product_list.id as product_id, endpointman_model_list.template_data, endpointman_model_list.id as model_id, endpointman_template_list.* FROM endpointman_product_list, endpointman_model_list, endpointman_template_list WHERE endpointman_product_list.id = endpointman_template_list.product_id AND endpointman_template_list.model_id = endpointman_model_list.id AND endpointman_template_list.id = " . $id;
-		} else {
-			$sql = "SELECT endpointman_model_list.max_lines, endpointman_model_list.model as model_name, endpointman_mac_list.global_custom_cfg_data, endpointman_product_list.config_files, endpointman_mac_list.*, endpointman_line_list.*, endpointman_model_list.id as model_id, endpointman_model_list.template_data, endpointman_product_list.id as product_id, endpointman_product_list.short_name, endpointman_product_list.cfg_dir, endpointman_brand_list.directory FROM endpointman_brand_list, endpointman_mac_list, endpointman_model_list, endpointman_product_list, endpointman_line_list WHERE endpointman_mac_list.id=" . $id . " AND endpointman_mac_list.id = endpointman_line_list.mac_id AND endpointman_mac_list.model = endpointman_model_list.id AND endpointman_model_list.brand = endpointman_brand_list.id AND endpointman_model_list.product_id = endpointman_product_list.id";
+		if ($custom == 0)
+		{
+			$sql = sprintf("SELECT endpointman_model_list.max_lines, endpointman_model_list.model as model_name, endpointman_template_list.global_custom_cfg_data,  endpointman_product_list.config_files, endpointman_product_list.short_name, endpointman_product_list.id as product_id, endpointman_model_list.template_data, endpointman_model_list.id as model_id, endpointman_template_list.* FROM endpointman_product_list, endpointman_model_list, endpointman_template_list WHERE endpointman_product_list.id = endpointman_template_list.product_id AND endpointman_template_list.model_id = endpointman_model_list.id AND endpointman_template_list.id = %s", $id);
 		}
-		$row = sql($sql, 'getRow', DB_FETCHMODE_ASSOC);
+		else
+		{
+			$sql = sprintf("SELECT endpointman_model_list.max_lines, endpointman_model_list.model as model_name, endpointman_mac_list.global_custom_cfg_data, endpointman_product_list.config_files, endpointman_mac_list.*, endpointman_line_list.*, endpointman_model_list.id as model_id, endpointman_model_list.template_data, endpointman_product_list.id as product_id, endpointman_product_list.short_name, endpointman_product_list.cfg_dir, endpointman_brand_list.directory FROM endpointman_brand_list, endpointman_mac_list, endpointman_model_list, endpointman_product_list, endpointman_line_list WHERE endpointman_mac_list.id = %s AND endpointman_mac_list.id = endpointman_line_list.mac_id AND endpointman_mac_list.model = endpointman_model_list.id AND endpointman_model_list.brand = endpointman_brand_list.id AND endpointman_model_list.product_id = endpointman_product_list.id", $id);
+		}
+
+		$row = sql($sql, 'getRow', \PDO::FETCH_ASSOC);
 		$config_files_list = explode(",", $row['config_files']);
 		asort($config_files_list);
 		
@@ -593,18 +849,22 @@ class Endpointman_Templates
     	
     	$alt_configs = NULL;
     
-    	if ($custom == 0) {
-    		$sql = "SELECT model_id FROM endpointman_template_list WHERE id=" . $id;
-    	} else {
-    		$sql = "SELECT model FROM endpointman_mac_list WHERE id=" . $id;
+    	if ($custom == 0)
+		{
+    		$sql = sprintf("SELECT model_id FROM endpointman_template_list WHERE id = %s", $id);
     	}
-    
+		else
+		{
+    		$sql = sprintf("SELECT model FROM endpointman_mac_list WHERE id = %s", $id);
+    	}
     	$model_id = sql($sql, 'getOne');
     
+		//TODO: He comentado esto ya que sync-model ya no existe!!!!!!!
     	//Make sure the model data from the local confg files are stored in the database and vice-versa. Serious errors will occur if the database is not in sync with the local file
-    	if (!$this->epm_config->sync_model($model_id)) {
-    		die("unable to sync local template files - TYPE:" . $custom);
-    	}
+    	// if (!$this->epm_config->sync_model($model_id))
+		// {
+    	// 	die("unable to sync local template files - TYPE:" . $custom);
+    	// }
    
     	$dReturn = array();
 
@@ -615,7 +875,7 @@ class Endpointman_Templates
 		} else {
 			$sql = "SELECT endpointman_model_list.max_lines, endpointman_model_list.model as model_name, endpointman_mac_list.global_custom_cfg_data, endpointman_product_list.config_files, endpointman_mac_list.*, endpointman_line_list.*, endpointman_model_list.id as model_id, endpointman_model_list.template_data, endpointman_product_list.id as product_id, endpointman_product_list.short_name, endpointman_product_list.cfg_dir, endpointman_brand_list.directory FROM endpointman_brand_list, endpointman_mac_list, endpointman_model_list, endpointman_product_list, endpointman_line_list WHERE endpointman_mac_list.id=" . $id . " AND endpointman_mac_list.id = endpointman_line_list.mac_id AND endpointman_mac_list.model = endpointman_model_list.id AND endpointman_model_list.brand = endpointman_brand_list.id AND endpointman_model_list.product_id = endpointman_product_list.id";
 		}
-		$row = sql($sql, 'getRow', DB_FETCHMODE_ASSOC);
+		$row = sql($sql, 'getRow', \PDO::FETCH_ASSOC);
 		
 		
 		$dReturn['template_editor_display'] = 1;
@@ -659,9 +919,9 @@ class Endpointman_Templates
 		$only_configs = array();
 		foreach ($config_files_list as $files) {
 			$sql = "SELECT * FROM  endpointman_custom_configs WHERE product_id = '" . $row['product_id'] . "' AND original_name = '" . $files . "'";
-			$alt_configs_list_count = sql($sql, 'getAll', DB_FETCHMODE_ASSOC );
+			$alt_configs_list_count = sql($sql, 'getAll', \PDO::FETCH_ASSOC );
 			if (! empty($alt_configs_list_count)) {
-				$alt_configs_list = sql($sql, 'getAll', DB_FETCHMODE_ASSOC);
+				$alt_configs_list = sql($sql, 'getAll', \PDO::FETCH_ASSOC);
 				$alt_configs[$i]['name'] = $files;
 				$alt_configs[$i]['id_p'] = $row['product_id'];
 				$files = str_replace(".", "_", $files);
@@ -747,6 +1007,7 @@ class Endpointman_Templates
     	}
     
     	if (!isset($temp)) {
+			//TODO: Esto seguro que peta, pero si no lo hace hay que ver que hace!!!! configmod es obsoleto ahora es epm->isConfigExist
     		if (! $this->configmod->isExiste('new')) {
     			$this->error['modelsAvailable'] = "You need to enable at least ONE model";
     		}
@@ -1061,7 +1322,7 @@ class Endpointman_Templates
     		$template_variables_array['tooltip'] = htmlentities($cfg_data['tooltip']);
     	}
     
-    	if (($this->configmod->get('enable_ari')) AND ($admin) AND ($cfg_data['type'] != "break") AND ($cfg_data['type'] != "group") AND ($template_type == 'GENERAL')) {
+    	if (($this->epm->getConfig('enable_ari')) AND ($admin) AND ($cfg_data['type'] != "break") AND ($cfg_data['type'] != "group") AND ($template_type == 'GENERAL')) {
     
     		$template_variables_array['aried'] = 1;
     		$template_variables_array['ari']['key'] = $key;
@@ -1082,12 +1343,5 @@ class Endpointman_Templates
     	}
     	return($template_variables_array);
     }
-	
-	
-	
-	
-	
-	
-	
 	
 }

@@ -1,11 +1,14 @@
 <?PHP
 
-function getMethod() {
-	$method = $_SERVER['REQUEST_METHOD'];
+function getMethod()
+{
+	$method   = $_SERVER['REQUEST_METHOD'];
 	$override = isset($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE']) ? $_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'] : (isset($_GET['method']) ? $_GET['method'] : '');
 	if ($method == 'POST' && strtoupper($override) == 'PUT') {
 		$method = 'PUT';
-	} elseif ($method == 'POST' && strtoupper($override) == 'DELETE') {
+	}
+    elseif ($method == 'POST' && strtoupper($override) == 'DELETE')
+    {
 		$method = 'DELETE';
 	}
 	return $method;
@@ -24,7 +27,7 @@ $epm = FreePBX::create()->Endpointman;
 
 
 define('PROVISIONER_BASE', $amp_conf['AMPWEBROOT'].'/admin/modules/_ep_phone_modules/');
-$server_type = FreePBX::Endpointman()->configmod->get("server_type");
+$server_type = FreePBX::Endpointman()->getConfig("server_type");
 
 
 //Check if it's allowed in FreePBX through Endpoint Manager first
@@ -36,7 +39,7 @@ if ((!isset($server_type)) OR ($server_type != 'http')) {
 }
 
 
-$provis_ip = FreePBX::Endpointman()->configmod->get("srvip");
+$provis_ip = FreePBX::Endpointman()->getConfig("srvip");
 
 if(((getMethod() == 'PUT') OR (getMethod() == 'POST'))) {
     //write log files or other files to drive. not sussed out yet completely.
@@ -59,7 +62,8 @@ if(((getMethod() == 'PUT') OR (getMethod() == 'POST'))) {
     die();
 }
 
-if(getMethod() == "GET") {
+if(getMethod() == "GET")
+{
     # Workaround for SPAs that don't actually request their type of device
     # Assume they're 504G's. Faulty in firmware 7.4.3a
     $filename = basename($_SERVER["REQUEST_URI"]);
@@ -86,7 +90,7 @@ if(getMethod() == "GET") {
         
         #Just moved this Block of code up to fix the provisioning for Snom Phones
         require_once (PROVISIONER_BASE.'endpoint/base.php');
-        $data = Provisioner_Globals::dynamic_global_files($filename, FreePBX::Endpointman()->configmod->get("config_location"), $web_path);
+        $data = Provisioner_Globals::dynamic_global_files($filename, FreePBX::Endpointman()->getConfig("config_location"), $web_path);
         if($data !== FALSE) {
             echo $data;
         } 
@@ -112,9 +116,12 @@ if(getMethod() == "GET") {
             die();
         }
         
-        if (array_key_exists($filename, $files)) {
+        if (array_key_exists($filename, $files))
+        {
             echo $files[$filename];
-        } else {
+        }
+        else
+        {
             header("HTTP/1.0 404 Not Found", true, 404);
             echo "<h1>"._("Error 404 Not Found")."</h1>";
             echo _("File not Found!");
