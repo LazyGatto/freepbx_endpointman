@@ -31,6 +31,11 @@ class Endpointman_Devices
 		}
 	}
 
+	public function showPage(array &$data)
+	{
+		
+	}
+
 	public function ajaxRequest($req, &$setting) {
 		/*
 		$arrVal = array("");
