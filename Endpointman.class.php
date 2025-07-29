@@ -1267,6 +1267,10 @@ class Endpointman extends FreePBX_Helpers implements BMO {
 				$data_return = load_view(__DIR__."/views/page.main.oos.php", $data);
 			break;
 			
+			case 'main.devices':
+				$data_return = load_view(__DIR__."/views/page.main.devices.php", $data);
+			break;
+			
 			case "main.placeholders":
 				$data_return = load_view(__DIR__."/views/page.main.placeholders.php", $data);
 			break;

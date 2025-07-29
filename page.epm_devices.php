@@ -1,70 +1,7 @@
 <?php
-/*
-Endpoint Manager V2
-Copyright (C) 2009-2010  Ed Macri, John Mullinix and Andrew Nagy 
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
-*/
+if (!defined('FREEPBX_IS_AUTH')) { die('No direct script access allowed'); }
+//	License for all code of this FreePBX module can be found in the license file inside the module directory
+//	Copyright 2013 Schmooze Com Inc.
+//
 
-$epm = \FreePBX::create()->Endpointman;
-
-global $active_modules;
-
-if (!empty($active_modules['endpoint']['rawname'])) {
-	if ($epm->getConfig("disable_endpoint_warning") !== "1") {
-		include('page.epm_warning.php');  
-	}
-}
-
-if(file_exists('/tftpboot')) {
-	if(!is_writeable('/tftpboot')) {
-		die(_('/tftpboot is not writable'));
-	}
-}
-else
-{
-	die(_("Please create /tftpboot, even if you won't use it"));
-}
-
-if(!is_writeable($epm->MODULE_PATH))
-{
-	chmod($epm->MODULE_PATH, 0764);
-}
-if(!is_writeable($epm->PHONE_MODULES_PATH))
-{
-	chmod($epm->PHONE_MODULES_PATH, 0764);
-}
-
-if($amp_conf['AMPENGINE'] != 'asterisk')
-{
-	die(_("Sorry, Only Asterisk is supported currently"));
-}
-
-
-
-include 'includes/functions.inc.php';
-global $endpoint, $debug;
-$debug = NULL;
-$endpoint = new endpointmanager();
-global $global_cfg, $debug;
-
-
-
-
-$page = $_REQUEST['page'] ?? '';
-
-if(isset($global_cfg['debug']) && $global_cfg['debug'])
-{
-	$debug .= "Request Variables: \n".print_r($_REQUEST, TRUE);
-}
-include FreePBX::Endpointman()->MODULE_PATH.'/includes/devices_manager.inc';
+echo \FreePBX::Endpointman()->showPage("main.devices");

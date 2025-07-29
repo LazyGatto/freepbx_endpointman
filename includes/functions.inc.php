@@ -55,44 +55,44 @@ class endpointmanager {
             $this->global_cfg['disable_epm'] = TRUE;
         }
 
-				if(!defined("UPDATE_PATH")) {
-					define("UPDATE_PATH", $this->global_cfg['update_server']);
-				}
-				if(!defined("MODULES_PATH")) {
-					define("MODULES_PATH", dirname(dirname(dirname(__FILE__))) . '/');
-				}
+		// 		if(!defined("UPDATE_PATH")) {
+		// 			define("UPDATE_PATH", $this->global_cfg['update_server']);
+		// 		}
+		// 		if(!defined("MODULES_PATH")) {
+		// 			define("MODULES_PATH", dirname(dirname(dirname(__FILE__))) . '/');
+		// 		}
 
 
-        //Determine if local path is correct!
-        if (file_exists(MODULES_PATH . "endpointman/")) {
-					if(!defined("LOCAL_PATH")) {
-						define("LOCAL_PATH", MODULES_PATH . "endpointman/");
-					}
-        } else {
-            die("Can't Load Local Endpoint Manager Directory!");
-        }
+        // //Determine if local path is correct!
+        // if (file_exists(MODULES_PATH . "endpointman/")) {
+		// 			if(!defined("LOCAL_PATH")) {
+		// 				define("LOCAL_PATH", MODULES_PATH . "endpointman/");
+		// 			}
+        // } else {
+        //     die("Can't Load Local Endpoint Manager Directory!");
+        // }
 
         //Define the location of phone modules, keeping it outside of the module directory so that when the user updates endpointmanager they don't lose all of their phones
-        if (file_exists(MODULES_PATH . "_ep_phone_modules/")) {
-					if(!defined("PHONE_MODULES_PATH")) {
-						define("PHONE_MODULES_PATH", MODULES_PATH . "_ep_phone_modules/");
-					}
-        } else {
-					if(!defined("PHONE_MODULES_PATH")) {
-						define("PHONE_MODULES_PATH", MODULES_PATH . "_ep_phone_modules/");
-					}
-            if (!file_exists(PHONE_MODULES_PATH)) {
-                mkdir(PHONE_MODULES_PATH, 0775);
-            }
+        // if (file_exists(MODULES_PATH . "_ep_phone_modules/")) {
+		// 			if(!defined("PHONE_MODULES_PATH")) {
+		// 				define("PHONE_MODULES_PATH", MODULES_PATH . "_ep_phone_modules/");
+		// 			}
+        // } else {
+		// 			if(!defined("PHONE_MODULES_PATH")) {
+		// 				define("PHONE_MODULES_PATH", MODULES_PATH . "_ep_phone_modules/");
+		// 			}
+        //     if (!file_exists(PHONE_MODULES_PATH)) {
+        //         mkdir(PHONE_MODULES_PATH, 0775);
+        //     }
 
-            if (file_exists(PHONE_MODULES_PATH . "setup.php")) {
-                unlink(PHONE_MODULES_PATH . "setup.php");
-            }
+        //     if (file_exists(PHONE_MODULES_PATH . "setup.php")) {
+        //         unlink(PHONE_MODULES_PATH . "setup.php");
+        //     }
 
-            if (!file_exists(MODULES_PATH . "_ep_phone_modules/")) {
-                die('Endpoint Manager can not create the modules folder!');
-            }
-        }
+        //     if (!file_exists(MODULES_PATH . "_ep_phone_modules/")) {
+        //         die('Endpoint Manager can not create the modules folder!');
+        //     }
+        // }
 
         //include the local template class
         if (!class_exists('RainTPL')) {
