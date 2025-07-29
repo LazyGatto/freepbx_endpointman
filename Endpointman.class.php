@@ -329,6 +329,16 @@ class Endpointman extends FreePBX_Helpers implements BMO {
 			'perms' => 0755
 		);
 		$files[] = array(
+			'type'  => 'dir',
+			'path'  => $this->PROVISIONER_PATH,
+			'perms' => 0755
+		);
+		$files[] = array(
+			'type'  => 'dir',
+			'path'  => $this->EXPORT_PATH,
+			'perms' => 0755
+		);
+		$files[] = array(
 			'type'  => 'file',
 			'path'  => $this->system->buildPath($this->PHONE_MODULES_PATH, "setup.php"),
 			'perms' => 0755
