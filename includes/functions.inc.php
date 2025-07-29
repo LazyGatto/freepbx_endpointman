@@ -18,6 +18,7 @@ class endpointmanager {
     public $message; //message construct
     public $eda; //endpoint data abstraction layer
     public $tpl; //Template System Object (RAIN TPL)
+    public $system;
 
     /**
      *
