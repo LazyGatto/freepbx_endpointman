@@ -1,24 +1,19 @@
 <?php if (!defined('FREEPBX_IS_AUTH')) { die('No direct script access allowed'); } ?>
 
-<?= $endpoint_warn ?>
 <div class="container-fluid">
-	<h2><?= _('Device')?></h2>
-	<div class="fpbx-container">
-		<div class="alert alert-info alert-dismissible fade show" role="alert">
+    <h2><?= _('Devices') ?></h2>
+    <div class="fpbx-container">
+        <!-- Info Alert -->
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
             <i class="fa fa-info fa-4x fa-pull-left fa-border" aria-hidden="true"></i>
-            <?= _('This page helps you building your phone Packages.')?><br>
-            <br>
-            <?= _('Create or modify your config files and replace the needed values with the Placeholders.')?><br />
-            <?= _('With this information you can add new Phones to OSS EPM within minutes.')?><br />
-            <br />
-            <?= _('If you need a specific value to add your Phone you can make a feature request.')?>
+            <?= _('This page helps you manage your phone devices.') ?><br>
+            <?= _('Add, edit, or remove devices and assign templates as needed.') ?>
             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
             </button>
         </div>
 
-		<div id="toolbar-all-hwgrid">
-        </div>
+        <!-- Device Table -->
         <table 
             id="hwgrid"
             data-cache="false"
@@ -29,22 +24,43 @@
             data-search="true"
             data-toolbar="#toolbar-all-hwgrid"
             class="table table-striped">
-			<thead>
-				<tr>
-					<th width="7%""></th>
-					<th width="13%" align='center'><?= _('MAC Address')?></th>
-					<th width="13%" align='center'><?= _('Brand')?></th>
-					<th width="10%" align='center'><?= _('Model of Phone')?></th>
-					<th width="10%" align='center'><?= _('Line')?></th>
-					<th width="19%" align='center'><?= _('Extension Number')?></th>
-					<th width="15%" align='center'><?= _('Template')?></th>
-					<th width="6%"></th>
-					<th width="7%"></th>
-				</tr>
-			</thead>
-			<tbody>
+            <thead>
+                <tr>
+                    <th><?= _('Status') ?></th>
+                    <th><?= _('MAC Address') ?></th>
+                    <th><?= _('Brand') ?></th>
+                    <th><?= _('Model') ?></th>
+                    <th><?= _('Line') ?></th>
+                    <th><?= _('Extension') ?></th>
+                    <th><?= _('Template') ?></th>
+                    <th><?= _('Edit') ?></th>
+                    <th><?= _('Delete') ?></th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($devices as $device): ?>
+                <tr>
+                    <td>
+                        <i class="icon-off icon-large <?= $device['status'] ? 'green' : 'red' ?>" title="<?= $device['ip'] ?>"></i>
+                    </td>
+                    <td><?= htmlspecialchars($device['mac']) ?></td>
+                    <td><?= htmlspecialchars($device['brand']) ?></td>
+                    <td><?= htmlspecialchars($device['model']) ?></td>
+                    <td><?= htmlspecialchars($device['line']) ?></td>
+                    <td><?= htmlspecialchars($device['extension']) ?></td>
+                    <td><?= htmlspecialchars($device['template']) ?></td>
+                    <td>
+                        <a href="#" onclick="editDevice(<?= $device['id'] ?>);"><i class="fa fa-pencil"></i></a>
+                    </td>
+                    <td>
+                        <a href="#" onclick="deleteDevice(<?= $device['id'] ?>);"><i class="fa fa-trash"></i></a>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
             </tbody>
         </table>
 
-	</div>
+        <!-- Bulk/Global Actions (add as needed) -->
+        <!-- ... -->
+    </div>
 </div>
