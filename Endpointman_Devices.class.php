@@ -41,7 +41,7 @@ class Endpointman_Devices
     $ava_exts = $epm->display_registration_list();
 
     // 2. Get device statuses from Asterisk
-    $asterisk_location = $epm->epm->getConfig("asterisk_location");
+    $asterisk_location = $epm->getConfig("asterisk_location");
     $device_statuses_output = shell_exec($asterisk_location . " -rx 'sip show peers'");
     $device_statuses_lines = explode("\n", $device_statuses_output);
     $devices_status = [];
@@ -153,7 +153,7 @@ class Endpointman_Devices
     $brands = $epm->brands_available();
 
     // 9. Netmask for device search
-    $netmask = !empty($epm->global_cfg['nmap_search']) ? $epm->global_cfg['nmap_search'] : ($_SERVER["SERVER_ADDR"] ?? '0.0.0.0').'/24';
+    $netmask = !empty($epm->getConfig['nmap_search']) ? $epm->getConfig['nmap_search'] : ($_SERVER["SERVER_ADDR"] ?? '0.0.0.0').'/24';
 
     // 10. Assign all to $data for the template
     $data['devices']      = $devices;
