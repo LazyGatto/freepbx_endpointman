@@ -153,7 +153,7 @@ class Endpointman_Devices
     $brands = $epm->brands_available();
 
     // 9. Netmask for device search
-    $netmask = !empty($epm->getConfig['nmap_search']) ? $epm->getConfig['nmap_search'] : ($_SERVER["SERVER_ADDR"] ?? '0.0.0.0').'/24';
+    $netmask = !empty($epm->getConfig('nmap_search')) ? $epm->getConfig('nmap_search') : ($_SERVER["SERVER_ADDR"] ?? '0.0.0.0').'/24';
 
     // 10. Assign all to $data for the template
     $data['devices']      = $devices;
