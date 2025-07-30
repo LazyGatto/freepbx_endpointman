@@ -2968,67 +2968,6 @@ class Endpointman extends FreePBX_Helpers implements BMO {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    /**
-
-
     function add_device($mac, $model, $ext, $template=NULL, $line=NULL, $displayname=NULL) {
     	$mac = $this->mac_check_clean($mac);
     	if ($mac) {
@@ -3198,15 +3137,11 @@ class Endpointman extends FreePBX_Helpers implements BMO {
     }
 
 
-    
 
-
-
-
+	/**
      * Display all unused registrations from whatever manager we are using!
      * @return <type>
      */
-	     /**
     function display_registration_list($line_id=NULL) {
 
     	if (isset($line_id)) {
@@ -3235,7 +3170,7 @@ class Endpointman extends FreePBX_Helpers implements BMO {
     }
 
 
-
+	/*
      * Send this function an ID from the mac devices list table and you'll get all the information we have on that particular phone
      * @param integer $mac_id ID number reference from the MySQL database referencing the table endpointman_mac_list
      * @return array
@@ -3280,6 +3215,7 @@ class Endpointman extends FreePBX_Helpers implements BMO {
      *                        )
      *                )
      *         )
+	*/
 
     function get_phone_info($mac_id=NULL) {
     	//You could screw up a phone if the mac_id is blank
@@ -3343,11 +3279,12 @@ class Endpointman extends FreePBX_Helpers implements BMO {
 		$phone_info = "test";
     	return $phone_info;
     }
-*/
+
     /**
      * Get the brand from any mac sent to this function
      * @param string $mac
      * @return array
+	 */
 
     function get_brand_from_mac($mac) {
     	//Check for valid mac address first
@@ -3376,13 +3313,12 @@ class Endpointman extends FreePBX_Helpers implements BMO {
     	return($phone_info);
     }
 
-*/
-
     /**
      * Prepare and then send the data that Provisioner expects, then take what provisioner gives us and do what it says
      * @param array $phone_info Everything from get_phone_info
      * @param bool  $reboot Reboot the Phone after write
      * @param bool  $write  Write out Directory structure.
+	 */
 
     function prepare_configs($phone_info, $reboot=TRUE, $write=TRUE)
     {
@@ -3749,93 +3685,6 @@ $this->error['parse_configs'] = "File not written to hard drive!";
     		$provisioner_lib->reboot();
     	}
     }
-*/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -3844,9 +3693,6 @@ $this->error['parse_configs'] = "File not written to hard drive!";
 	/*********************************************
 	****** CODIGO ANTIGUO -- SIN REVISADO ********
 	*********************************************/
-
-
-
 
 
 
